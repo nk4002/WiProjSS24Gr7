@@ -88,7 +88,8 @@ public class MainFrame extends JFrame {
         gbcUsername.gridx = 0;
         gbcUsername.gridy = 0;
         gbcUsername.fill = GridBagConstraints.HORIZONTAL;
-        gbcUsername.anchor = GridBagConstraints.NORTH; // Set anchor to NORTH
+        gbcUsername.anchor = GridBagConstraints.NORTH; 
+
         gbcUsername.insets = new Insets(5, 5, 5, 5);
         usernameField = new JTextField(20);
         usernameField.setBorder(BorderFactory.createTitledBorder("Username"));
@@ -99,7 +100,7 @@ public class MainFrame extends JFrame {
         gbcPassword.gridx = 0;
         gbcPassword.gridy = 1;
         gbcPassword.fill = GridBagConstraints.HORIZONTAL;
-        gbcPassword.anchor = GridBagConstraints.NORTH; // Set anchor to NORTH
+        gbcPassword.anchor = GridBagConstraints.NORTH; 
         gbcPassword.insets = new Insets(5, 5, 5, 5);
         passwordField = new JPasswordField(20);
         passwordField.setBorder(BorderFactory.createTitledBorder("Password"));
@@ -110,7 +111,7 @@ public class MainFrame extends JFrame {
         gbcLoginButton.gridx = 0;
         gbcLoginButton.gridy = 2;
         gbcLoginButton.fill = GridBagConstraints.HORIZONTAL;
-        gbcLoginButton.anchor = GridBagConstraints.NORTH; // Set anchor to NORTH
+        gbcLoginButton.anchor = GridBagConstraints.NORTH; 
         gbcLoginButton.insets = new Insets(5, 5, 5, 5);
         loginButton = new JButton("Login");
         cardLogIn.add(loginButton, gbcLoginButton);
