@@ -124,6 +124,7 @@ public class MainFrame extends JFrame {
     }
 	private class Controller {
 		
+		//Methode nimmt Text aus den Feldern Ruft getRole() in DBManager auf und übergibt den returnten String switchCard()
 		public static void handleLogin(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel, JTextField usernameField, JPasswordField passwordField) {
 			char[] passwordChars = passwordField.getPassword();
 			String password = new String(passwordChars);
@@ -131,6 +132,7 @@ public class MainFrame extends JFrame {
 			switchCard(cardLayout, cardsPanel, cardName);
 		}
 		
+		//Methode Geht zu Karte deren Name als String übergeben wurde 
 		public static void switchCard(CardLayout cardLayout, JPanel cardsPanel, String cardName) {
             cardLayout.show(cardsPanel, cardName);
         }

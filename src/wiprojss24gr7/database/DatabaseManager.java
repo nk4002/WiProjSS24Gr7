@@ -25,6 +25,8 @@ public class DatabaseManager {
         return DriverManager.getConnection(URL + DB_NAME, USERNAME, PASSWORD);
     } 
     
+    //Methode nimmt Username u. Passwort(Hasht den Text) und gleicht mit den gespeicherten
+    //Daten aus der Datenbank ab die Rolle wird als String returned
     public static String getRole(String username, String password) {
         String hashedPassword;
         try {
@@ -84,7 +86,7 @@ public class DatabaseManager {
         return null; // keinen Treffer erzielt
     }
     
-    
+    //Methode setzt eingeloggten User um mit diesem arbeiten zu können
     public static void logIn(int PK, String userType) {
     	System.out.println(PK);
     	try (Connection conn = getConnection()) {
