@@ -13,12 +13,15 @@ import java.awt.event.ActionListener;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
 import wiprojss24gr7.database.DatabaseManager;
+import wiprojss24gr7.userhandling.User;
 
 
 public class MainFrame extends JFrame {
@@ -70,8 +73,8 @@ public class MainFrame extends JFrame {
 
         //Erstelle Karten
         cardLogIn = new JPanel();
-        cardStudent = new JPanel();
-        cardProfessor = new JPanel();
+        cardStudent = new JPanel(new BorderLayout());
+        cardProfessor = new JPanel(new BorderLayout());
         cardPpa = new JPanel();
 
         //Füge Karten zu cardPanel hinzu
@@ -79,6 +82,10 @@ public class MainFrame extends JFrame {
         cardsPanel.add(cardStudent, "CardStudent");
         cardsPanel.add(cardProfessor, "CardProfessor");
         cardsPanel.add(cardPpa, "CardPpa");
+        
+        /////////////////////////////////////////////////////////
+        //Code zu Login Panel
+        /////////////////////////////////////////////////////////
         
         //Komponenten von cardLogIn Panel werden hinzugefügt
         cardLogIn.setLayout(new GridBagLayout());
@@ -116,6 +123,52 @@ public class MainFrame extends JFrame {
         loginButton = new JButton("Login");
         cardLogIn.add(loginButton, gbcLoginButton);
         loginButton.addActionListener(e -> Controller.handleLogin(e, cardLayout, cardsPanel, usernameField, passwordField));
+        
+        /////////////////////////////////////////////////////////
+        //Code zu Student Panel
+        /////////////////////////////////////////////////////////
+        
+        //Top Panel für Button und Label werden mit borderLayout.Himmelsrichtung recht und links platziert
+        JPanel topPanelS = new JPanel(new BorderLayout());
+
+        JLabel studentLabel = new JLabel("Student Label");
+        topPanelS.add(studentLabel, BorderLayout.WEST);
+
+        JButton abmeldenS = new JButton("Abmelden");
+        abmeldenS.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
+        topPanelS.add(abmeldenS, BorderLayout.EAST);
+
+        cardStudent.add(topPanelS, BorderLayout.NORTH);
+
+        //JTabbedPane wird im Zentrum platziert
+        JTabbedPane tabbedPaneS = new JTabbedPane();
+        tabbedPaneS.addTab("Tab 1", new JPanel());
+        tabbedPaneS.addTab("Tab 2", new JPanel());
+        tabbedPaneS.addTab("Tab 3", new JPanel());
+        cardStudent.add(tabbedPaneS, BorderLayout.CENTER);
+
+        /////////////////////////////////////////////////////////
+        //Code zu Professor Panel
+        /////////////////////////////////////////////////////////
+        
+        //Top Panel für Button und Label werden mit borderLayout.Himmelsrichtung recht und links platziert
+        JPanel topPanelP = new JPanel(new BorderLayout());
+
+        JLabel ProfLabel = new JLabel("Professor Label");
+        topPanelP.add(ProfLabel, BorderLayout.WEST);
+
+        JButton abmeldenP = new JButton("Abmelden");
+        abmeldenP.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
+        topPanelP.add(abmeldenP, BorderLayout.EAST);
+
+        cardProfessor.add(topPanelP, BorderLayout.NORTH);
+
+        //JTabbedPane wird im Zentrum platziert
+        JTabbedPane tabbedPaneP = new JTabbedPane();
+        tabbedPaneP.addTab("Tab 1", new JPanel());
+        tabbedPaneP.addTab("Tab 2", new JPanel());
+        tabbedPaneP.addTab("Tab 3", new JPanel());
+        cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
 
 
         //cardsPane werden auf contentPane gelegt
@@ -131,6 +184,11 @@ public class MainFrame extends JFrame {
 			String password = new String(passwordChars);
 			String cardName = DatabaseManager.getRole(usernameField.getText(), password);
 			switchCard(cardLayout, cardsPanel, cardName);
+		}
+		
+		public static void handleLogout(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel) {
+			User.setLoggedInuser(null);
+			cardLayout.show(cardsPanel, "CardLogIn");
 		}
 		
 		//Methode Geht zu Karte deren Name als String übergeben wurde 
