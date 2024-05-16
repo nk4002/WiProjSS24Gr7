@@ -184,11 +184,13 @@ public class MainFrame extends JFrame {
 			String password = new String(passwordChars);
 			String cardName = DatabaseManager.getRole(usernameField.getText(), password);
 			switchCard(cardLayout, cardsPanel, cardName);
+			usernameField.setText("");
+			passwordField.setText("");
 		}
 		
 		public static void handleLogout(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel) {
 			User.setLoggedInuser(null);
-			cardLayout.show(cardsPanel, "CardLogIn");
+			switchCard(cardLayout, cardsPanel, "CardLogIn");
 		}
 		
 		//Methode Geht zu Karte deren Name als String übergeben wurde 
