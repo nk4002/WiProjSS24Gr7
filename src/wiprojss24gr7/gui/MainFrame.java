@@ -188,7 +188,7 @@ public class MainFrame extends JFrame {
 		
 		public static void handleLogout(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel) {
 			User.setLoggedInuser(null);
-			cardLayout.show(cardsPanel, "CardLogIn");
+			switchCard(cardLayout, cardsPanel, "CardLogIn");
 		}
 		
 		//Methode Geht zu Karte deren Name als String übergeben wurde 
