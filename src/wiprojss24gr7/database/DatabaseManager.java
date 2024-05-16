@@ -20,6 +20,7 @@ public class DatabaseManager {
     private static final String USERNAME = "db7";
     private static final String PASSWORD = "!db7.seo24?SS1";
 
+
     public static Connection getConnection() throws ClassNotFoundException, SQLException {
     	Class.forName(DRIVER);
         return DriverManager.getConnection(URL + DB_NAME, USERNAME, PASSWORD);
