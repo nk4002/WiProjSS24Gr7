@@ -4,20 +4,28 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 
 import wiprojss24gr7.database.DatabaseManager;
@@ -37,6 +45,7 @@ public class MainFrame extends JFrame {
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JButton loginButton;
+    private JProgressBar progressBarStudent;
     
 
 	/**
@@ -75,7 +84,7 @@ public class MainFrame extends JFrame {
         cardLogIn = new JPanel();
         cardStudent = new JPanel(new BorderLayout());
         cardProfessor = new JPanel(new BorderLayout());
-        cardPpa = new JPanel();
+        cardPpa = new JPanel(new BorderLayout());
 
         //Füge Karten zu cardPanel hinzu
         cardsPanel.add(cardLogIn, "CardLogIn");
@@ -169,7 +178,96 @@ public class MainFrame extends JFrame {
         tabbedPaneP.addTab("Tab 2", new JPanel());
         tabbedPaneP.addTab("Tab 3", new JPanel());
         cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
+        
+        /////////////////////////////////////////////////////////
+        //Code zu Ppa Panel
+        /////////////////////////////////////////////////////////
+        
+        //Top Panel für Button und Label werden mit borderLayout.Himmelsrichtung recht und links platziert
+        JPanel topPanelPpa = new JPanel(new BorderLayout());
 
+        JLabel PpaLabel = new JLabel("Ppa Label");
+        topPanelPpa.add(PpaLabel, BorderLayout.WEST);
+
+        JButton abmeldenPpa = new JButton("Abmelden");
+        abmeldenPpa.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
+        topPanelPpa.add(abmeldenPpa, BorderLayout.EAST);
+
+        cardPpa.add(topPanelPpa, BorderLayout.NORTH);
+
+        //JTabbedPane wird im Zentrum platziert
+        JTabbedPane tabbedPanePpa = new JTabbedPane();
+        
+        //StudentenListe in Tab 1
+        DefaultListModel<String> studentListPpaModel = new DefaultListModel<>();
+        studentListPpaModel.addElement("Student 1");//Platzhalter
+        studentListPpaModel.addElement("Student 2");//Platzhalter
+        studentListPpaModel.addElement("Student 3");//Platzhalter
+        JList<String> studentListPpa = new JList<>(studentListPpaModel);
+        studentListPpa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        //Textbereich um Studenteninfo anzuzeigen
+        JTextArea textAreaStudentPpa = new JTextArea();
+        textAreaStudentPpa.setEditable(false);
+        JScrollPane scrollPaneStudentPpa = new JScrollPane(textAreaStudentPpa);
+        
+        //Button Panel
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        progressBarStudent = new JProgressBar(0, 100);
+        progressBarStudent.setStringPainted(true);
+        progressBarStudent.setString("Beispiel");  //Platzhalter
+        JButton Button1Ppa = new JButton("Button 1");	//Platzhalter
+        JButton button2Ppa = new JButton("Button 2");	//Platzhalter
+        buttonPanel.add(progressBarStudent);
+        buttonPanel.add(Button1Ppa);
+        buttonPanel.add(button2Ppa);
+        
+        //Panel für Liste/Textbox
+        JPanel tabPanelPpa = new JPanel(new BorderLayout());
+        tabPanelPpa.add(new JScrollPane(studentListPpa), BorderLayout.WEST);
+        tabPanelPpa.add(scrollPaneStudentPpa, BorderLayout.CENTER);
+        tabPanelPpa.add(buttonPanel, BorderLayout.SOUTH);
+        
+        tabbedPanePpa.addTab("Studentenverwaltung", tabPanelPpa);
+        
+        //Studenten/Professoren Zuteilung Tab 2 Listen + Button zum Zuteilen
+        JList<String> studentListTab2Ppa = new JList<>(studentListPpaModel);
+        studentListTab2Ppa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        JTextArea studentDetailTextAreaTab2 = new JTextArea();
+        studentDetailTextAreaTab2.setEditable(false);
+        JScrollPane studentDetailScrollPaneTab2Ppa = new JScrollPane(studentDetailTextAreaTab2);
+        
+        DefaultListModel<String> professorListModelTab2 = new DefaultListModel<>();
+        JList<String> professorListTab2Ppa = new JList<>(professorListModelTab2);
+        professorListTab2Ppa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        JTextArea professorDetailTextAreaTab2 = new JTextArea();
+        professorDetailTextAreaTab2.setEditable(false);
+        JScrollPane professorDetailScrollPaneTab2Ppa = new JScrollPane(professorDetailTextAreaTab2);
+        
+        JButton zuweiseButton = new JButton("Zuweisen");
+        
+        JPanel studentPanelTab2Ppa = new JPanel(new BorderLayout());
+        studentPanelTab2Ppa.add(new JScrollPane(studentListTab2Ppa), BorderLayout.CENTER);
+        studentPanelTab2Ppa.add(studentDetailScrollPaneTab2Ppa, BorderLayout.SOUTH);
+        
+        JPanel professorPanelTab2Ppa = new JPanel(new BorderLayout());
+        professorPanelTab2Ppa.add(new JScrollPane(professorListTab2Ppa), BorderLayout.CENTER);
+        professorPanelTab2Ppa.add(professorDetailScrollPaneTab2Ppa, BorderLayout.SOUTH);
+        
+        JPanel mainPanelTab2Ppa = new JPanel(new GridLayout(1, 2));
+        mainPanelTab2Ppa.add(studentPanelTab2Ppa);
+        mainPanelTab2Ppa.add(professorPanelTab2Ppa);
+        
+        JPanel tabPanel2Ppa = new JPanel(new BorderLayout());
+        tabPanel2Ppa.add(mainPanelTab2Ppa, BorderLayout.CENTER);
+        tabPanel2Ppa.add(zuweiseButton, BorderLayout.SOUTH);
+        
+        tabbedPanePpa.addTab("Betreuerverwaltung", tabPanel2Ppa);
+        
+        cardPpa.add(tabbedPanePpa, BorderLayout.CENTER);
 
         //cardsPane werden auf contentPane gelegt
         contentPane.add(cardsPanel, BorderLayout.CENTER);
