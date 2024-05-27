@@ -11,6 +11,11 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
@@ -29,6 +34,9 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 
 import wiprojss24gr7.database.DatabaseManager;
+import wiprojss24gr7.service.UserService;
+import wiprojss24gr7.userhandling.Ppa;
+import wiprojss24gr7.userhandling.Student;
 import wiprojss24gr7.userhandling.User;
 
 
@@ -46,6 +54,9 @@ public class MainFrame extends JFrame {
     private JPasswordField passwordField;
     private JButton loginButton;
     private JProgressBar progressBarStudent;
+    DefaultListModel<String> studentListPpaModel;
+    DefaultListModel<String> studentListModelTab2Ppa;
+    DefaultListModel<String> professorListModelTab2;
     
 
 	/**
@@ -131,7 +142,7 @@ public class MainFrame extends JFrame {
         gbcLoginButton.insets = new Insets(5, 5, 5, 5);
         loginButton = new JButton("Login");
         cardLogIn.add(loginButton, gbcLoginButton);
-        loginButton.addActionListener(e -> Controller.handleLogin(e, cardLayout, cardsPanel, usernameField, passwordField));
+        loginButton.addActionListener(e -> Controller.handleLogin(e, cardLayout, cardsPanel, usernameField, passwordField, studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa));
         
         /////////////////////////////////////////////////////////
         //Code zu Student Panel
@@ -199,10 +210,7 @@ public class MainFrame extends JFrame {
         JTabbedPane tabbedPanePpa = new JTabbedPane();
         
         //StudentenListe in Tab 1
-        DefaultListModel<String> studentListPpaModel = new DefaultListModel<>();
-        studentListPpaModel.addElement("Student 1");//Platzhalter
-        studentListPpaModel.addElement("Student 2");//Platzhalter
-        studentListPpaModel.addElement("Student 3");//Platzhalter
+        studentListPpaModel = new DefaultListModel<>();
         JList<String> studentListPpa = new JList<>(studentListPpaModel);
         studentListPpa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
@@ -210,6 +218,15 @@ public class MainFrame extends JFrame {
         JTextArea textAreaStudentPpa = new JTextArea();
         textAreaStudentPpa.setEditable(false);
         JScrollPane scrollPaneStudentPpa = new JScrollPane(textAreaStudentPpa);
+        
+        studentListPpa.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 1) { // Handle single-click, change as needed
+                    Controller.handleMouseClick(studentListPpa, textAreaStudentPpa, "studentList");
+                }
+            }
+        });
         
         //Button Panel
         JPanel buttonPanel = new JPanel();
@@ -232,20 +249,39 @@ public class MainFrame extends JFrame {
         tabbedPanePpa.addTab("Studentenverwaltung", tabPanelPpa);
         
         //Studenten/Professoren Zuteilung Tab 2 Listen + Button zum Zuteilen
-        JList<String> studentListTab2Ppa = new JList<>(studentListPpaModel);
+        studentListModelTab2Ppa = new DefaultListModel<>();
+        JList<String> studentListTab2Ppa = new JList<>(studentListModelTab2Ppa);
         studentListTab2Ppa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         JTextArea studentDetailTextAreaTab2 = new JTextArea();
         studentDetailTextAreaTab2.setEditable(false);
         JScrollPane studentDetailScrollPaneTab2Ppa = new JScrollPane(studentDetailTextAreaTab2);
         
-        DefaultListModel<String> professorListModelTab2 = new DefaultListModel<>();
+        studentListTab2Ppa.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 1) { // Handle single-click, change as needed
+                    Controller.handleMouseClick(studentListTab2Ppa, studentDetailTextAreaTab2, "studentListNoTutor");
+                }
+            }
+        });
+        
+        professorListModelTab2 = new DefaultListModel<>();
         JList<String> professorListTab2Ppa = new JList<>(professorListModelTab2);
         professorListTab2Ppa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         JTextArea professorDetailTextAreaTab2 = new JTextArea();
         professorDetailTextAreaTab2.setEditable(false);
         JScrollPane professorDetailScrollPaneTab2Ppa = new JScrollPane(professorDetailTextAreaTab2);
+        
+        professorListTab2Ppa.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 1) { // Handle single-click, change as needed
+                    Controller.handleMouseClick(professorListTab2Ppa, professorDetailTextAreaTab2, "professorList");
+                }
+            }
+        });
         
         JButton zuweiseButton = new JButton("Zuweisen");
         
@@ -271,29 +307,113 @@ public class MainFrame extends JFrame {
 
         //cardsPane werden auf contentPane gelegt
         contentPane.add(cardsPanel, BorderLayout.CENTER);
-        
-        
     }
+	
 	private class Controller {
 		
-		//Methode nimmt Text aus den Feldern Ruft getRole() in DBManager auf und übergibt den returnten String switchCard()
-		public static void handleLogin(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel, JTextField usernameField, JPasswordField passwordField) {
-			char[] passwordChars = passwordField.getPassword();
-			String password = new String(passwordChars);
-			String cardName = DatabaseManager.getRole(usernameField.getText(), password);
-			switchCard(cardLayout, cardsPanel, cardName);
-			usernameField.setText("");
-			passwordField.setText("");
-		}
-		
+	
+		private static final Logger logger = Logger.getLogger(MainFrame.class.getName());
+
+	    //logIn
+		public static void handleLogin(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel, JTextField usernameField, JPasswordField passwordField, DefaultListModel<String> modelA, DefaultListModel<String> modelB, DefaultListModel<String> modelC) {
+	        String cardName = authenticateUser(usernameField.getText(), new String(passwordField.getPassword()));
+	        switchCard(cardLayout, cardsPanel, cardName, modelA, modelB, modelC);
+	        clearFields(usernameField, passwordField);
+	    }
+
+	    //logOut
 		public static void handleLogout(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel) {
-			User.setLoggedInuser(null);
-			switchCard(cardLayout, cardsPanel, "CardLogIn");
-		}
-		
-		//Methode Geht zu Karte deren Name als String übergeben wurde 
-		public static void switchCard(CardLayout cardLayout, JPanel cardsPanel, String cardName) {
-            cardLayout.show(cardsPanel, cardName);
-        }
-    }
+	        User.setLoggedInuser(null);
+	        switchCard(cardLayout, cardsPanel, "CardLogIn", null, null, null);
+	        UserService.delSL();
+	    }
+
+	    //Authentifiziert Nutzer
+		private static String authenticateUser(String username, String password) {
+	        String role = DatabaseManager.getRole(username, password);
+	        logger.log(Level.INFO, "User authenticated: {0}", username);
+	        return role;
+	    }
+	    
+	    //Wechselt Karten
+	    private static void switchCard(CardLayout cardLayout, JPanel cardsPanel, String cardName, DefaultListModel<String> modelA, DefaultListModel<String> modelB, DefaultListModel<String> modelC) {
+	        cardLayout.show(cardsPanel, cardName);
+	        if (modelA != null && modelB != null && modelC != null) {
+	            controlPopulateList(modelA, modelB, modelC);
+	        }
+	    }
+
+	    //Steuert wie welche Listen gefüllt werden
+	    private static void controlPopulateList(DefaultListModel<String> modelA, DefaultListModel<String> modelB, DefaultListModel<String> modelC) {
+	        if (User.getLoggedInuser() instanceof Ppa) {
+	            populateFullList(modelA, "studenten");
+	            populateFullList(modelB, "professoren");
+	            populateStudentNoTutorList(modelC, "studenten");
+	        }
+	    }
+
+	    //Füllt Liste mit allen Tabellenelementen
+	    private static void populateFullList(DefaultListModel<String> listModel, String tableName) {
+	        UserService.populateUserList(listModel, tableName);
+	        logger.log(Level.INFO, "Populated list model: {0}", tableName);
+	    }
+
+	    //Steht im namen lol wie oben
+	    private static void populateStudentNoTutorList(DefaultListModel<String> listModel, String tableName) {
+	        UserService.populateStudentNoTutorList(listModel, tableName);
+	        logger.log(Level.INFO, "Populated student list model without tutor: {0}", tableName);
+	    }
+
+	    //Leert der Anmeldedatenfelder
+	    private static void clearFields(JTextField usernameField, JPasswordField passwordField) {
+	        usernameField.setText("");
+	        passwordField.setText("");
+	        logger.log(Level.INFO, "login felder geleert.");
+	    }
+
+	    //Stuert was bei Klick passiert
+	    public static void handleMouseClick(JList<String> list, JTextArea textArea, String listIdentifier)  {
+	        String result;
+			try {
+				result = setSelectedUser(list, listIdentifier);
+				textArea.setText(result);
+		        logger.log(Level.INFO, "Listenelement gewählt: {0}", result);
+			} catch (ClassNotFoundException | SQLException e) {
+				e.printStackTrace();
+			}
+	    }
+	    
+	    //Setzt ausgewählten User
+	    public static String setSelectedUser(JList<String> studentList, String listIdentifier) throws ClassNotFoundException, SQLException {
+	        int selectedIndex = studentList.getSelectedIndex();
+	        if (selectedIndex != -1) {
+	            int selectedPk = getSelectedPk(selectedIndex, listIdentifier);
+	            if (selectedPk != -1) {
+	                User selectedUser = DatabaseManager.getUserByPk(selectedPk);
+	                if ("professorList".equals(listIdentifier)) {
+	                    User.setSelectedProf(selectedUser);
+	                } else {
+	                    User.setSelectedUser(selectedUser);
+	                }
+	                logger.log(Level.INFO, "Selected User: {0}", selectedUser);
+	                return selectedUser.toString();
+	            }
+	        }
+	        return null;
+	    }
+
+	    private static int getSelectedPk(int selectedIndex, String listIdentifier) throws ClassNotFoundException, SQLException {
+	        switch (listIdentifier) {
+	            case "studentList":
+	                return UserService.getSLIndex(selectedIndex);
+	            case "studentListNoTutor":
+	                return UserService.getSLNoTutorIndex(selectedIndex);
+	            case "professorList":
+	                return UserService.getPLIndex(selectedIndex);
+	            default:
+	                logger.log(Level.WARNING, "Unbekannte Liste: {0}", listIdentifier);
+	                return -1;
+	        }
+	    }
+	}
 }

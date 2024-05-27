@@ -6,7 +6,12 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
 
+import wiprojss24gr7.service.UserService;
 import wiprojss24gr7.userhandling.Ppa;
 import wiprojss24gr7.userhandling.Professor;
 import wiprojss24gr7.userhandling.Student;
@@ -19,6 +24,8 @@ public class DatabaseManager {
     private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
     private static final String USERNAME = "db7";
     private static final String PASSWORD = "!db7.seo24?SS1";
+    
+    private static final Logger logger = Logger.getLogger(DatabaseManager.class.getName());
 
 
     public static Connection getConnection() throws ClassNotFoundException, SQLException {
@@ -87,81 +94,151 @@ public class DatabaseManager {
         return null; // keinen Treffer erzielt
     }
     
+    //Abgeändert am 27.05 + logger + kürzerer switch(kein break; benötigt)
     //Methode setzt eingeloggten User um mit diesem arbeiten zu können
     public static void logIn(int PK, String userType) {
-    	System.out.println(PK);
-    	try (Connection conn = getConnection()) {
-    	    String query;
-    	    //Erstes Switch um query zu setzen
-    	    switch (userType) {
-    	        case "studenten":
-    	            query = "SELECT * FROM studenten WHERE MNr = ?";
-    	            break;
-    	        case "professoren":
-    	            query = "SELECT * FROM professoren WHERE ProfID = ?";
-    	            break;
-    	        case "ppa":
-    	            query = "SELECT * FROM ppa WHERE PPAID = ?";
-    	            break;
-    	        default:
-    	            System.out.println("Unbekannter Benutzertyp");
-    	            return;
-    	    }
-    	    
-    	    //Zweites Switch um eingeloggten User zu setzen
-    	    try (PreparedStatement statement = conn.prepareStatement(query)) {
-    	        statement.setInt(1, PK);
-    	        try (ResultSet rs = statement.executeQuery()) {
-    	            if (rs.next()) {
-    	                switch (userType) {
-    	                    case "studenten":
-    	                        // Erstellt Student
-    	                        Student student = new Student(
-    	                            PK,
-    	                            rs.getString("Vorname"),
-    	                            rs.getString("Name"),
-    	                            rs.getString("Studiengang"),
-    	                            rs.getString("Firma"),
-    	                            rs.getString("Thema")
-    	                        );
-    	                        User.setLoggedInuser(student);
-    	                        System.out.println("Student eingeloggt: " + student.toString());
-    	                        break;
-    	                    case "professoren":
-    	                        // Erstellt Professor
-    	                        Professor professor = new Professor(
-    	                            PK,
-    	                            rs.getString("Name"),
-    	                            rs.getString("Vorname"),
-    	                            rs.getString("Fakultaet"),
-    	                            rs.getString("Fachbereich"),
-    	                            rs.getString("Buero")
-    	                        );
-    	                        User.setLoggedInuser(professor);
-    	                        System.out.println("Professor eingeloggt: " + professor.toString());
-    	                        break;
-    	                    case "ppa":
-    	                        // erstellt ppa
-    	                        Ppa ppa = new Ppa(
-    	                            PK,
-    	                            null,
-    	                            null,
-    	                            rs.getString("Land"),
-    	                            rs.getString("Einrichtung")
-    	                        );	
-    	                        User.setLoggedInuser(ppa);
-    	                        System.out.println("PPA eingeloggt");
-    	                        break;
-    	                }
-    	            } else {
-    	                System.out.println("Benutzer nicht gefunden");
-    	            }
-    	        }
-    	    }
-    	} catch (SQLException | ClassNotFoundException e) {
-    	    e.printStackTrace();
-    	}
+        logger.info("Versucht logIn mit PK: " + PK);
+        try (Connection conn = getConnection()) {
+            String query = switch (userType) {
+                case "studenten" -> "SELECT * FROM studenten WHERE MNr = ?";
+                case "professoren" -> "SELECT * FROM professoren WHERE ProfID = ?";
+                case "ppa" -> "SELECT * FROM ppa WHERE PPAID = ?";
+                default -> {
+                    logger.warning("Unbekannter Benutzertyp: " + userType);
+                    yield null;
+                }
+            };
 
+            if (query == null) return;
+
+            try (PreparedStatement statement = conn.prepareStatement(query)) {
+                statement.setInt(1, PK);
+                try (ResultSet rs = statement.executeQuery()) {
+                    if (rs.next()) {
+                        User loggedInUser = switch (userType) {
+                            case "studenten" -> new Student(PK, rs.getString("Vorname"), rs.getString("Name"),
+                                    rs.getString("Studiengang"), rs.getString("Firma"), rs.getString("Thema"),
+                                    rs.getInt("ProfID"));
+                            case "professoren" -> new Professor(PK, rs.getString("Name"), rs.getString("Vorname"),
+                                    rs.getString("Fakultaet"), rs.getString("Fachbereich"), rs.getString("Buero"));
+                            case "ppa" -> new Ppa(PK, null, null, rs.getString("Land"), rs.getString("Einrichtung"));
+                            default -> null;
+                        };
+
+                        if (loggedInUser != null) {
+                            User.setLoggedInuser(loggedInUser);
+                            logger.info(userType.substring(0, 1).toUpperCase() + userType.substring(1) + " eingeloggt: " + loggedInUser.toString());
+                        }
+                    } else {
+                        logger.warning("Benutzer nicht gefunden");
+                    }
+                }
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            logger.severe("Error während logging in: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
+    //26.05
+    //fügt Usernamen übergebener Tabelle hinzu
+    public static List<String> getUsers(String tableName) {
+        List<String> users = new ArrayList<>();
+
+        String sql = switch (tableName) {
+            case "studenten" -> "SELECT MNr, Vorname, Name FROM studenten";
+            case "professoren" -> "SELECT ProfID, Vorname, Name FROM professoren";
+            default -> throw new IllegalArgumentException("Invalid table name: " + tableName);
+        };
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                String userName = rs.getString("Vorname") + " " + rs.getString("Name");
+                users.add(userName);
+                if ("studenten".equals(tableName)) {
+                    int mnr = rs.getInt("MNr");
+                    UserService.addSL(mnr);
+                } else if ("professoren".equals(tableName)) {
+                    int profId = rs.getInt("ProfID");
+                    UserService.addPL(profId);
+                }
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return users;
+    }
+ 
+    //26.05
+    //Studenten ohne Betreuer 
+    public static List<String> getStudentenWithNoTutor() {
+        List<String> users = new ArrayList<>();
+
+        String sql = "SELECT MNr, Vorname, Name FROM studenten WHERE ProfID IS NULL";
+
+        try (Connection conn = getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                String userName = rs.getString("Vorname") + " " + rs.getString("Name");
+                users.add(userName);
+                int mnr = rs.getInt("MNr");
+                UserService.addSLNoTutor(mnr);
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            logger.severe("Error fetching studenten with no tutor: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return users;
+    }
+
+    //27.05
+    //Returned Nutzer für selectedUser/Prof
+    public static User getUserByPk(int pk) throws ClassNotFoundException, SQLException {
+        try (Connection conn = getConnection();
+             PreparedStatement pstmtStudent = conn.prepareStatement("SELECT * FROM studenten WHERE MNr = ?");
+             PreparedStatement pstmtProfessor = conn.prepareStatement("SELECT * FROM professoren WHERE ProfID = ?")) {
+
+            pstmtStudent.setInt(1, pk);
+            try (ResultSet rsStudent = pstmtStudent.executeQuery()) {
+                if (rsStudent.next()) {
+                    return new Student(pk, rsStudent.getString("Vorname"), rsStudent.getString("Name"),
+                            rsStudent.getString("Studiengang"), rsStudent.getString("Firma"),
+                            rsStudent.getString("Thema"), rsStudent.getInt("ProfID"));
+                }
+            }
+
+            pstmtProfessor.setInt(1, pk);
+            try (ResultSet rsProfessor = pstmtProfessor.executeQuery()) {
+                if (rsProfessor.next()) {
+                    return new Professor(pk, rsProfessor.getString("Vorname"), rsProfessor.getString("Name"),
+                            rsProfessor.getString("Fakultaet"), rsProfessor.getString("FachBereich"),
+                            rsProfessor.getString("Buero"));
+                }
+            }
+        }
+    return null;
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
