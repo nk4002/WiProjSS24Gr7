@@ -15,7 +15,7 @@ public class Professor extends User {
 	@Override
 	public String toString() {
 		return "Professor [profId=" + PK + ", fakultaet=" + fakultaet + ", fachBereich=" + fachBereich + ", buero="
-				+ buero + ", toString()=" + super.toString() + ", getVorname()=" + getVorname() + ", getNachname()="
-				+ getNachname() + ", getClass()=" + getClass() + ", hashCode()=" + hashCode() + "]";
+				+ buero + ",\n toString()=" + super.toString() + ", getVorname()=" + getVorname() + ", getNachname()="
+				+ getNachname() + ",\n getClass()=" + getClass() + ", hashCode()=" + hashCode() + "]";
 	}
 }

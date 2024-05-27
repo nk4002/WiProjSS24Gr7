@@ -9,6 +9,9 @@ public class User {
 	private String Nachname;
 	protected static User loggedInUser;
 	
+	private static User selectedUser;
+	private static User selectedProf;
+	
 	
 	public User(int PK, String vorname, String nachname) {
 		this.PK=PK;
@@ -57,6 +60,23 @@ public class User {
 	public int getPK() {
 		return PK;
 	}
+
+	public static User getSelectedUser() {
+		return selectedUser;
+	}
+
+	public static void setSelectedUser(User selectedUser) {
+		User.selectedUser = selectedUser;
+	}
+
+	public static User getSelectedProf() {
+		return selectedProf;
+	}
+
+	public static void setSelectedProf(User selectedProf) {
+		User.selectedProf = selectedProf;
+	}
+
 	
 }
 
