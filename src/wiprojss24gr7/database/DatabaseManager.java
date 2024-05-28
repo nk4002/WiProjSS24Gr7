@@ -6,7 +6,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -19,7 +18,7 @@ import wiprojss24gr7.userhandling.User;
 import wiprojss24gr7.util.SecureUtil;
 
 public class DatabaseManager {
-	private static final String URL = "jdbc:mysql://3.69.96.96:80/";
+    private static final String URL = "jdbc:mysql://3.69.96.96:80/";
     private static final String DB_NAME = "db7";
     private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
     private static final String USERNAME = "db7";
@@ -27,21 +26,18 @@ public class DatabaseManager {
     
     private static final Logger logger = Logger.getLogger(DatabaseManager.class.getName());
 
-
     public static Connection getConnection() throws ClassNotFoundException, SQLException {
-    	Class.forName(DRIVER);
+        Class.forName(DRIVER);
         return DriverManager.getConnection(URL + DB_NAME, USERNAME, PASSWORD);
     } 
     
-    //Methode nimmt Username u. Passwort(Hasht den Text) und gleicht mit den gespeicherten
-    //Daten aus der Datenbank ab die Rolle wird als String returned
     public static String getRole(String username, String password) {
         String hashedPassword;
         try {
             hashedPassword = SecureUtil.hashPassword(password);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
-            return null; // Error
+            return null;
         }
         
         System.out.println(hashedPassword);
@@ -65,23 +61,23 @@ public class DatabaseManager {
                     if (rsStudent.next()) {
                         int mNr = rsStudent.getInt("MNr");
                         logIn(mNr, "studenten");
-                        return "CardStudent"; // Student gefunden
+                        return "CardStudent";
                     }
                 }
 
                 try (ResultSet rsProfessor = statementProfessor.executeQuery()) {
                     if (rsProfessor.next()) {
-                    	int ProfID = rsProfessor.getInt("ProfID");
-                    	logIn(ProfID, "professoren"); // Platzhalter
-                        return "CardProfessor"; // Professor gefunden
+                        int ProfID = rsProfessor.getInt("ProfID");
+                        logIn(ProfID, "professoren");
+                        return "CardProfessor";
                     }
                 }
 
                 try (ResultSet rsPPA = statementPPA.executeQuery()) {
                     if (rsPPA.next()) {
-                    	int ppaId = rsPPA.getInt("PPAID");
-                    	logIn(ppaId, "ppa"); // Platzhalter
-                        return "CardPpa"; // PPA gefunden
+                        int ppaId = rsPPA.getInt("PPAID");
+                        logIn(ppaId, "ppa");
+                        return "CardPpa";
                     }
                 }
             } catch (SQLException e) {
@@ -91,11 +87,9 @@ public class DatabaseManager {
             e.printStackTrace();
         }
 
-        return null; // keinen Treffer erzielt
+        return null;
     }
     
-    //Abgeändert am 27.05 + logger + kürzerer switch(kein break; benötigt)
-    //Methode setzt eingeloggten User um mit diesem arbeiten zu können
     public static void logIn(int PK, String userType) {
         logger.info("Versucht logIn mit PK: " + PK);
         try (Connection conn = getConnection()) {
@@ -140,8 +134,6 @@ public class DatabaseManager {
         }
     }
     
-    //26.05
-    //fügt Usernamen übergebener Tabelle hinzu
     public static List<String> getUsers(String tableName) {
         List<String> users = new ArrayList<>();
 
@@ -174,8 +166,6 @@ public class DatabaseManager {
         return users;
     }
  
-    //26.05
-    //Studenten ohne Betreuer 
     public static List<String> getStudentenWithNoTutor() {
         List<String> users = new ArrayList<>();
 
@@ -200,8 +190,6 @@ public class DatabaseManager {
         return users;
     }
 
-    //27.05
-    //Returned Nutzer für selectedUser/Prof
     public static User getUserByPk(int pk) throws ClassNotFoundException, SQLException {
         try (Connection conn = getConnection();
              PreparedStatement pstmtStudent = conn.prepareStatement("SELECT * FROM studenten WHERE MNr = ?");
@@ -225,20 +213,31 @@ public class DatabaseManager {
                 }
             }
         }
-    return null;
+        return null;
+    }
+
+    // Neue Methode, um die Professor-Daten abzurufen
+    public static List<String[]> getProfessorData() {
+        List<String[]> professorData = new ArrayList<>();
+        String sql = "SELECT CONCAT(Vorname, ' ', Name) AS Vollname, ProfID, Firma, Thema FROM professoren";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                String vollname = rs.getString("Vollname");
+                String profId = rs.getString("ProfID");
+                String firma = rs.getString("Firma");
+                String thema = rs.getString("Thema");
+                professorData.add(new String[]{vollname, profId, firma, thema});
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            logger.severe("Error fetching professor data: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return professorData;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
