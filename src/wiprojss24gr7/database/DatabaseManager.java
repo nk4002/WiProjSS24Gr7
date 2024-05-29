@@ -45,7 +45,7 @@ public class DatabaseManager {
         }
         
         System.out.println(hashedPassword);
-        String studentQuery = "SELECT MNr FROM studenten WHERE Benutzername = ? AND Passwort = ?";
+        String studentQuery = "SELECT MNr, Firma, Thema FROM studenten WHERE Benutzername = ? AND Passwort = ?";
         String professorQuery = "SELECT ProfID FROM professoren WHERE Benutzername = ? AND Passwort = ?";
         String ppaQuery = "SELECT PPAID FROM ppa WHERE Benutzername = ? AND Passwort = ?";
 
@@ -65,7 +65,16 @@ public class DatabaseManager {
                     if (rsStudent.next()) {
                         int mNr = rsStudent.getInt("MNr");
                         logIn(mNr, "studenten");
-                        return "CardStudent"; // Student gefunden
+                        String firma = rsStudent.getString("Firma");
+                        String thema = rsStudent.getString("Thema");
+                        if ((firma == null || firma.isEmpty()) && (thema == null || thema.isEmpty())) {
+                            // Firma and Thema are empty
+                            System.out.println("callt adäquat");
+                            return "CardStudentWithoutFirmaAndThema"; // Student found but Firma and Thema are empty
+                        } else {
+                            logIn(mNr, "studenten");
+                            return "CardStudent"; // Student found with Firma and Thema
+                        }
                     }
                 }
 
