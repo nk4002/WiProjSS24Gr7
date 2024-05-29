@@ -228,13 +228,13 @@ public class MainFrame extends JFrame {
         JPanel topPanelSE = new JPanel(new BorderLayout());
 
         JLabel studentELabel = new JLabel("Student Label");
-        topPanelS.add(studentELabel, BorderLayout.WEST);
+        topPanelSE.add(studentELabel, BorderLayout.WEST);
 
         JButton abmeldenSE = new JButton("Abmelden");
-        abmeldenS.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
-        topPanelS.add(abmeldenS, BorderLayout.EAST);
+        abmeldenSE.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
+        topPanelSE.add(abmeldenSE, BorderLayout.EAST);
 
-        cardStudentErstanmeldung.add(topPanelS, BorderLayout.NORTH);
+        cardStudentErstanmeldung.add(topPanelSE, BorderLayout.NORTH);
 
         //Unternehmen Feld
         JTextField companyField = new JTextField(20);
