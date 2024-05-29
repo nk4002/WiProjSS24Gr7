@@ -64,14 +64,13 @@ public class DatabaseManager {
                         String thema = rsStudent.getString("Thema");
                         logIn(mNr, "studenten");
 
-
-                        if (firma == null && thema == null) { // Student meldet sich zum Ersten mal an
-                            return "CardStudentErstanmeldung"; // Student kommt auf die Seite zur Erstanmeldung
+                        if ((firma == null || firma.isEmpty()) && (thema == null || thema.isEmpty())) {
+                        	logIn(mNr, "studenten");
+                        	return "CardStudentErstanmeldung"; // Student found but Firma and Thema are empty
+                        } else {
+                            logIn(mNr, "studenten");
+                            return "CardStudent"; // Student found with Firma and Thema
                         }
-                        
-                        return "CardStudent"; // Student gefunden der sich bereits registriert hat
-
-
                     }
                 }
 
@@ -229,7 +228,7 @@ public class DatabaseManager {
     // Neue Methode, um die Professor-Daten abzurufen
     public static List<String[]> getProfessorData() {
         List<String[]> professorData = new ArrayList<>();
-        String sql = "SELECT CONCAT(Vorname, ' ', Name) AS Vollname, ProfID, Firma, Thema FROM professoren";
+        String sql = "SELECT CONCAT(Vorname, ' ', Name) AS Vollname, ProfID FROM professoren";
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -238,9 +237,7 @@ public class DatabaseManager {
             while (rs.next()) {
                 String vollname = rs.getString("Vollname");
                 String profId = rs.getString("ProfID");
-                String firma = rs.getString("Firma");
-                String thema = rs.getString("Thema");
-                professorData.add(new String[]{vollname, profId, firma, thema});
+                professorData.add(new String[]{vollname, profId});
             }
 
         } catch (SQLException | ClassNotFoundException e) {

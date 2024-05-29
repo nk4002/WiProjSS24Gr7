@@ -76,7 +76,10 @@ public class User {
 	public static void setSelectedProf(User selectedProf) {
 		User.selectedProf = selectedProf;
 	}
-
+	
+	public String printUserDetails() {
+		return null;
+	}
 	
 }
 

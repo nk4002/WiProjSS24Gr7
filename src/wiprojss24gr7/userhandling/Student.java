@@ -25,7 +25,18 @@ public class Student extends User {
 				+ "]";
 	}
 
-
+	public String printUserDetails() {
+	    StringBuilder userDetails = new StringBuilder();
+	    userDetails.append("Student Details:\n");
+	    userDetails.append("----------------\n");
+	    userDetails.append("Vorname: ").append(getVorname()).append("\n");
+	    userDetails.append("Nachname: ").append(getNachname()).append("\n");
+	    userDetails.append("Studiengang: ").append(studiengang).append("\n");
+	    userDetails.append("Firma: ").append(firma).append("\n");
+	    userDetails.append("Thema: ").append(thema).append("\n");
+	    return userDetails.toString();
+	}
+	
 	public String getStudiengang() {
 		return studiengang;
 	}

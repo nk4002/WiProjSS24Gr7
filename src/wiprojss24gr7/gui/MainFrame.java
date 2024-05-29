@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -131,6 +132,45 @@ public class MainFrame extends JFrame {
         cardLogIn.add(loginButton, gbcLoginButton);
         loginButton.addActionListener(e -> Controller.handleLogin(e, cardLayout, cardsPanel, usernameField, passwordField, studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa));
 
+		/////////////////////////////////////////////////////////
+		//Code zu StudentErstanmeldung Panel
+		/////////////////////////////////////////////////////////
+		
+		//Top Panel für Button und Label werden mit BorderLayout.Himmelsrichtung recht und links platziert
+		JPanel topPanelSE = new JPanel(new BorderLayout());
+		
+		JLabel studentELabel = new JLabel("Student Label");
+		topPanelSE.add(studentELabel, BorderLayout.WEST);
+		
+		JButton abmeldenSE = new JButton("Abmelden");
+		abmeldenSE.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
+		topPanelSE.add(abmeldenSE, BorderLayout.EAST);
+		
+		cardStudentErstanmeldung.add(topPanelSE, BorderLayout.NORTH);
+		
+		//Center Panel for form fields
+		JPanel centerPanel = new JPanel();
+		centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+		
+		//Unternehmen Feld
+		JLabel companyLabel = new JLabel("Unternehmen:");
+		centerPanel.add(companyLabel);
+		
+		JTextField companyField = new JTextField(20);
+		centerPanel.add(companyField);
+		
+		//Themen Feld
+		JLabel topicLabel = new JLabel("Themen:");
+		centerPanel.add(topicLabel);
+		
+		JTextArea topicField = new JTextArea(5, 20);
+		topicField.setLineWrap(true);
+		topicField.setWrapStyleWord(true);
+		JScrollPane topicScrollPane = new JScrollPane(topicField);
+		centerPanel.add(topicScrollPane);
+		
+		cardStudentErstanmeldung.add(centerPanel, BorderLayout.CENTER);
+        
         /////////////////////////////////////////////////////////
         // Code zu Student Panel
         /////////////////////////////////////////////////////////
@@ -219,36 +259,6 @@ public class MainFrame extends JFrame {
             }
         });
 
-        
-        /////////////////////////////////////////////////////////
-        //Code zu StudentErstanmeldung Panel
-        /////////////////////////////////////////////////////////
-        
-        //Top Panel für Button und Label werden mit borderLayout.Himmelsrichtung recht und links platziert
-        JPanel topPanelSE = new JPanel(new BorderLayout());
-
-        JLabel studentELabel = new JLabel("Student Label");
-        topPanelSE.add(studentELabel, BorderLayout.WEST);
-
-        JButton abmeldenSE = new JButton("Abmelden");
-        abmeldenSE.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
-        topPanelSE.add(abmeldenSE, BorderLayout.EAST);
-
-        cardStudentErstanmeldung.add(topPanelSE, BorderLayout.NORTH);
-
-        //Unternehmen Feld
-        JTextField companyField = new JTextField(20);
-        cardStudentErstanmeldung.add(companyField, BorderLayout.CENTER);
-        
-        //Themen Feld
-        JTextArea topicField = new JTextArea(5, 20);
-        cardStudentErstanmeldung.add(topicField, BorderLayout.CENTER);
-        
-        
-        
-        
-        
-        
         
         //Button Panel
 
@@ -412,7 +422,7 @@ public class MainFrame extends JFrame {
                         User.setSelectedUser(selectedUser);
                     }
                     logger.log(Level.INFO, "Selected User: {0}", selectedUser);
-                    return selectedUser.toString();
+                    return selectedUser.printUserDetails();
                 }
             }
             return null;
