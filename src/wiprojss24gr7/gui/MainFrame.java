@@ -50,6 +50,7 @@ public class MainFrame extends JFrame {
     private JPanel cardStudent;
     private JPanel cardProfessor;
     private JPanel cardPpa;
+    private JPanel cardStudentErstanmeldung;
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JButton loginButton;
@@ -96,12 +97,14 @@ public class MainFrame extends JFrame {
         cardStudent = new JPanel(new BorderLayout());
         cardProfessor = new JPanel(new BorderLayout());
         cardPpa = new JPanel(new BorderLayout());
+        cardStudentErstanmeldung = new JPanel(new BorderLayout());
 
         //Füge Karten zu cardPanel hinzu
         cardsPanel.add(cardLogIn, "CardLogIn");
         cardsPanel.add(cardStudent, "CardStudent");
         cardsPanel.add(cardProfessor, "CardProfessor");
         cardsPanel.add(cardPpa, "CardPpa");
+        cardsPanel.add(cardStudentErstanmeldung, "CardStudentErstanmeldung");
         
         /////////////////////////////////////////////////////////
         //Code zu Login Panel
@@ -227,6 +230,36 @@ public class MainFrame extends JFrame {
                 }
             }
         });
+        
+        /////////////////////////////////////////////////////////
+        //Code zu StudentErstanmeldung Panel
+        /////////////////////////////////////////////////////////
+        
+        //Top Panel für Button und Label werden mit borderLayout.Himmelsrichtung recht und links platziert
+        JPanel topPanelSE = new JPanel(new BorderLayout());
+
+        JLabel studentELabel = new JLabel("Student Label");
+        topPanelS.add(studentELabel, BorderLayout.WEST);
+
+        JButton abmeldenSE = new JButton("Abmelden");
+        abmeldenS.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
+        topPanelS.add(abmeldenS, BorderLayout.EAST);
+
+        cardStudentErstanmeldung.add(topPanelS, BorderLayout.NORTH);
+
+        //Unternehmen Feld
+        JTextField companyField = new JTextField(20);
+        cardStudentErstanmeldung.add(companyField, BorderLayout.CENTER);
+        
+        //Themen Feld
+        JTextArea topicField = new JTextArea(5, 20);
+        cardStudentErstanmeldung.add(topicField, BorderLayout.CENTER);
+        
+        
+        
+        
+        
+        
         
         //Button Panel
         JPanel buttonPanel = new JPanel();

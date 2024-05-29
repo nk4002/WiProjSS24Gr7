@@ -45,7 +45,7 @@ public class DatabaseManager {
         }
         
         System.out.println(hashedPassword);
-        String studentQuery = "SELECT MNr FROM studenten WHERE Benutzername = ? AND Passwort = ?";
+        String studentQuery = "SELECT MNr, Firma, Thema FROM studenten WHERE Benutzername = ? AND Passwort = ?";
         String professorQuery = "SELECT ProfID FROM professoren WHERE Benutzername = ? AND Passwort = ?";
         String ppaQuery = "SELECT PPAID FROM ppa WHERE Benutzername = ? AND Passwort = ?";
 
@@ -64,8 +64,15 @@ public class DatabaseManager {
                 try (ResultSet rsStudent = statementStudent.executeQuery()) {
                     if (rsStudent.next()) {
                         int mNr = rsStudent.getInt("MNr");
+                        String firma = rsStudent.getString("Firma");
+                        String thema = rsStudent.getString("Thema");
                         logIn(mNr, "studenten");
-                        return "CardStudent"; // Student gefunden
+
+                        if (firma == null && thema == null) { // Student meldet sich zum Ersten mal an
+                            return "CardStudentErstanmeldung"; // Student kommt auf die Seite zur Erstanmeldung
+                        }
+                        
+                        return "CardStudent"; // Student gefunden der sich bereits registriert hat
                     }
                 }
 
