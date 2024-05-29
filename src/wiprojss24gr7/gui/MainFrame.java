@@ -9,6 +9,7 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.SQLException;
@@ -259,19 +260,34 @@ public class MainFrame extends JFrame {
             }
         });
 
-        
-        //Button Panel
-
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-        progressBarStudent = new JProgressBar(0, 100);
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JProgressBar progressBarStudent = new JProgressBar(0, 100);
         progressBarStudent.setStringPainted(true);
         progressBarStudent.setString("Beispiel");
-        JButton Button1Ppa = new JButton("Button 1");
+        JButton button1Ppa = new JButton("Button 1");
         JButton button2Ppa = new JButton("Button 2");
+        JButton buttonAktivieren = new JButton("Aktivieren");
+
         buttonPanel.add(progressBarStudent);
-        buttonPanel.add(Button1Ppa);
+        buttonPanel.add(button1Ppa);
         buttonPanel.add(button2Ppa);
+        buttonPanel.add(buttonAktivieren);
+
+        //Aktiviert Student und lädt Listen neu um Änderung zu reflektieren
+        buttonAktivieren.addActionListener(e -> {
+            Student selectedStudent = (Student) Student.getSelectedUser();
+            if (selectedStudent.isAktiviert()) {
+                return;
+            } else {
+                selectedStudent.setAktiviert(true);
+                try {
+                    DatabaseManager.activateStudent();
+                    Controller.controlPopulateList(studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa);
+                } catch (ClassNotFoundException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        });
 
         JPanel tabPanelPpa = new JPanel(new BorderLayout());
         tabPanelPpa.add(new JScrollPane(studentListPpa), BorderLayout.WEST);
@@ -287,6 +303,7 @@ public class MainFrame extends JFrame {
         JTextArea studentDetailTextAreaTab2 = new JTextArea();
         studentDetailTextAreaTab2.setEditable(false);
         JScrollPane studentDetailScrollPaneTab2Ppa = new JScrollPane(studentDetailTextAreaTab2);
+
 
         studentListTab2Ppa.addMouseListener(new MouseAdapter() {
             @Override
@@ -339,6 +356,7 @@ public class MainFrame extends JFrame {
         contentPane.add(cardsPanel, BorderLayout.CENTER);
     }
 
+    ///////////////////////////////////////////////////////////////////////////
     private void loadDataIntoTable(DefaultTableModel tableModel) {
         List<String[]> data = DatabaseManager.getProfessorData(); 
         for (String[] row : data) {

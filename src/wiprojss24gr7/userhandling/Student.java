@@ -5,12 +5,14 @@ public class Student extends User {
 	private String firma;
 	private String thema;
 	private int profID;
+	private boolean aktiviert;
 	
-	public Student(int PK, String vorname, String nachname, String studiengang, String firma, String thema, int profID) {
+	public Student(int PK, String vorname, String nachname, String studiengang, String firma, String thema, int profID, boolean aktiviert) {
 		super(PK, vorname, nachname);
 		this.studiengang = studiengang;
-		this.firma=firma;
-		this.thema=thema;
+		this.firma = firma;
+		this.thema = thema;
+		this.aktiviert = aktiviert;
 		this.setProfID(profID);
 	}
 
@@ -68,4 +70,13 @@ public class Student extends User {
 	public void setProfID(int profID) {
 		this.profID = profID;
 	}
+
+	public boolean isAktiviert() {
+		return aktiviert;
+	}
+
+	public void setAktiviert(boolean aktiviert) {
+		this.aktiviert = aktiviert;
+	}
+	
 }

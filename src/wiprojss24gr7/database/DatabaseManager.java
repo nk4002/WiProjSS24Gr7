@@ -64,7 +64,7 @@ public class DatabaseManager {
                         String thema = rsStudent.getString("Thema");
                         logIn(mNr, "studenten");
 
-                        if ((firma == null || firma.isEmpty()) && (thema == null || thema.isEmpty())) {
+                        if (isEmpty(firma) && isEmpty(thema)) {
                         	logIn(mNr, "studenten");
                         	return "CardStudentErstanmeldung"; // Student found but Firma and Thema are empty
                         } else {
@@ -121,7 +121,7 @@ public class DatabaseManager {
                         User loggedInUser = switch (userType) {
                             case "studenten" -> new Student(PK, rs.getString("Vorname"), rs.getString("Name"),
                                     rs.getString("Studiengang"), rs.getString("Firma"), rs.getString("Thema"),
-                                    rs.getInt("ProfID"));
+                                    rs.getInt("ProfID"), rs.getBoolean("Aktiviert"));
                             case "professoren" -> new Professor(PK, rs.getString("Name"), rs.getString("Vorname"),
                                     rs.getString("Fakultaet"), rs.getString("Fachbereich"), rs.getString("Buero"));
                             case "ppa" -> new Ppa(PK, null, null, rs.getString("Land"), rs.getString("Einrichtung"));
@@ -143,11 +143,12 @@ public class DatabaseManager {
         }
     }
     
+    //Geändert am 29.05 von if else auf switch + check ob Aktiviert oder nicht.
     public static List<String> getUsers(String tableName) {
         List<String> users = new ArrayList<>();
 
         String sql = switch (tableName) {
-            case "studenten" -> "SELECT MNr, Vorname, Name FROM studenten";
+            case "studenten" -> "SELECT * FROM studenten";
             case "professoren" -> "SELECT ProfID, Vorname, Name FROM professoren";
             default -> throw new IllegalArgumentException("Invalid table name: " + tableName);
         };
@@ -158,13 +159,24 @@ public class DatabaseManager {
 
             while (rs.next()) {
                 String userName = rs.getString("Vorname") + " " + rs.getString("Name");
-                users.add(userName);
+
+                // Check if the table name is "studenten" before accessing "Firma" and "Thema"
                 if ("studenten".equals(tableName)) {
-                    int mnr = rs.getInt("MNr");
-                    UserService.addSL(mnr);
-                } else if ("professoren".equals(tableName)) {
-                    int profId = rs.getInt("ProfID");
-                    UserService.addPL(profId);
+                    if (rs.getBoolean("Aktiviert")==false) {
+                        userName += "(Nicht Aktiviert!)";
+                    }
+                }
+
+                users.add(userName);
+
+                // Handle user-specific data
+                switch (tableName) {
+                    case "studenten":
+                        UserService.addSL(rs.getInt("MNr"));
+                        break;
+                    case "professoren":
+                        UserService.addPL(rs.getInt("ProfID"));
+                        break;
                 }
             }
 
@@ -174,6 +186,33 @@ public class DatabaseManager {
 
         return users;
     }
+
+    //Utilitäre Methode um Dopplung zu vermeiden.
+    //Platzhalter
+    private static boolean isEmpty(String str) {
+        return str == null || str.isEmpty();
+    }
+    
+    //Geht durch Tabelle Studenten und setzt Stud. mit passender MNr auf Aktiviert
+    public static void activateStudent() throws ClassNotFoundException {
+        int mNr = User.getSelectedUser().getPK();
+        String sql = "UPDATE studenten SET Aktiviert = true WHERE MNr = ?";
+        
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, mNr);
+            int rowsUpdated = pstmt.executeUpdate();
+            
+            if (rowsUpdated > 0) {
+                logger.info("Student activated successfully. MNr: " + mNr);
+            } else {
+                logger.warning("No student found with the given MNr: " + mNr);
+            }
+        } catch (SQLException e) {
+            logger.severe("Error activating student: " + e.getMessage());
+        }
+    }
+
  
     public static List<String> getStudentenWithNoTutor() {
         List<String> users = new ArrayList<>();
@@ -209,7 +248,8 @@ public class DatabaseManager {
                 if (rsStudent.next()) {
                     return new Student(pk, rsStudent.getString("Vorname"), rsStudent.getString("Name"),
                             rsStudent.getString("Studiengang"), rsStudent.getString("Firma"),
-                            rsStudent.getString("Thema"), rsStudent.getInt("ProfID"));
+                            rsStudent.getString("Thema"), rsStudent.getInt("ProfID"),
+                            rsStudent.getBoolean("Aktiviert"));
                 }
             }
 
