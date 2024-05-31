@@ -23,6 +23,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JProgressBar;
@@ -152,7 +153,7 @@ public class MainFrame extends JFrame {
 		//Abmelden Button
 		gbcTop.gridx = 1;
 		gbcTop.gridy = 0;
-		gbcTop.weightx = 1.0; // Pushes the button to the right
+		gbcTop.weightx = 1.0; // Rückt den Button nach rechts ein
 		gbcTop.anchor = GridBagConstraints.EAST;
 		JButton abmeldenSE = new JButton("Abmelden");
 		abmeldenSE.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
@@ -196,6 +197,20 @@ public class MainFrame extends JFrame {
 		topicField.setWrapStyleWord(true);
 		JScrollPane topicScrollPane = new JScrollPane(topicField);
 		centerPanel.add(topicScrollPane, gbcCenter);
+
+		// bestätigen Button
+		gbcCenter.gridx = 0;
+		gbcCenter.gridy = 2;
+		gbcCenter.gridwidth = 3;
+		gbcCenter.anchor = GridBagConstraints.CENTER;
+		JButton confirmButton = new JButton("Stammdaten bestätigen");
+		confirmButton.addActionListener(new ActionListener() {
+		    @Override
+		    public void actionPerformed(ActionEvent e) {
+		        handleConfirm(companyField, topicField);
+		    }
+		});
+		centerPanel.add(confirmButton, gbcCenter);
 
 		cardStudentErstanmeldung.add(centerPanel, BorderLayout.CENTER);
 
@@ -388,6 +403,36 @@ public class MainFrame extends JFrame {
         List<String[]> data = DatabaseManager.getProfessorData(); 
         for (String[] row : data) {
             tableModel.addRow(row);
+        }
+    }
+    
+    /////////////////////////////////////////////////////////
+    // Methode für den bestätigen Button bei Studenterstanmeldung
+    /////////////////////////////////////////////////////////
+    private void handleConfirm(JTextField companyField, JTextArea topicField) {
+        String company = companyField.getText();
+        String topic = topicField.getText();
+
+        System.out.println("Confirm button clicked");
+        System.out.println("Company: " + company);
+        System.out.println("Topic: " + topic);
+
+        if (company.isEmpty() || topic.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Bitte füllen Sie alle Felder aus", "Fehler",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Save data to the database
+        try {
+            DatabaseManager.saveStudentData(User.getLoggedInuser(), company, topic);
+            JOptionPane.showMessageDialog(null, "Stammdaten erfolgreich gespeichert", "Erfolg",
+                    JOptionPane.INFORMATION_MESSAGE);
+            // Optionally, you can switch the card or close the dialog here
+        } catch (SQLException e) {
+            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, e);
+            JOptionPane.showMessageDialog(null, "Fehler beim Speichern der Daten", "Fehler",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 

@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import wiprojss24gr7.service.UserService;
@@ -286,5 +287,28 @@ public class DatabaseManager {
         }
 
         return professorData;
+    }
+    
+    // Methode um Firma und Thema zu speichern
+    public static void saveStudentData(User user, String company, String topic) throws SQLException {
+        String query = "UPDATE studenten SET Firma = ?, Thema = ? WHERE MNr = ?";
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, company);
+            stmt.setString(2, topic);
+            stmt.setInt(3, user.getPK()); // PK = MNr
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                logger.log(Level.INFO, "Student data saved successfully for user with PK: {0}", user.getPK());
+            } else {
+                logger.log(Level.WARNING, "No student record found for user with PK: {0}", user.getPK());
+            }
+        } catch (ClassNotFoundException e) {
+            logger.log(Level.SEVERE, "Database driver not found", e);
+            throw new SQLException("Unable to load database driver", e);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Error saving student data", e);
+            throw e;
+        }
     }
 }
