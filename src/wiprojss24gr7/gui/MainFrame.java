@@ -133,45 +133,72 @@ public class MainFrame extends JFrame {
         cardLogIn.add(loginButton, gbcLoginButton);
         loginButton.addActionListener(e -> Controller.handleLogin(e, cardLayout, cardsPanel, usernameField, passwordField, studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa));
 
-		/////////////////////////////////////////////////////////
-		//Code zu StudentErstanmeldung Panel
-		/////////////////////////////////////////////////////////
-		
-		//Top Panel für Button und Label werden mit BorderLayout.Himmelsrichtung recht und links platziert
-		JPanel topPanelSE = new JPanel(new BorderLayout());
-		
+        /////////////////////////////////////////////////////////
+        //Code zu StudentErstanmeldung Panel
+        /////////////////////////////////////////////////////////
+
+        //Top Panel für Button und Label werden mit GridBagLayout recht und links platziert
+		JPanel topPanelSE = new JPanel(new GridBagLayout());
+		GridBagConstraints gbcTop = new GridBagConstraints();
+		gbcTop.insets = new Insets(5, 5, 5, 5);
+
+		//Student Label
+		gbcTop.gridx = 0;
+		gbcTop.gridy = 0;
+		gbcTop.anchor = GridBagConstraints.WEST;
 		JLabel studentELabel = new JLabel("Student Label");
-		topPanelSE.add(studentELabel, BorderLayout.WEST);
-		
+		topPanelSE.add(studentELabel, gbcTop);
+
+		//Abmelden Button
+		gbcTop.gridx = 1;
+		gbcTop.gridy = 0;
+		gbcTop.weightx = 1.0; // Pushes the button to the right
+		gbcTop.anchor = GridBagConstraints.EAST;
 		JButton abmeldenSE = new JButton("Abmelden");
 		abmeldenSE.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
-		topPanelSE.add(abmeldenSE, BorderLayout.EAST);
-		
+		topPanelSE.add(abmeldenSE, gbcTop);
+
 		cardStudentErstanmeldung.add(topPanelSE, BorderLayout.NORTH);
-		
-		//Center Panel for form fields
-		JPanel centerPanel = new JPanel();
-		centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
-		
+
+		//Center Panel für Unternehmen und Themenfeld
+		JPanel centerPanel = new JPanel(new GridBagLayout());
+		GridBagConstraints gbcCenter = new GridBagConstraints();
+		gbcCenter.insets = new Insets(5, 5, 5, 5);
+		gbcCenter.fill = GridBagConstraints.HORIZONTAL;
+
 		//Unternehmen Feld
+		gbcCenter.gridx = 0;
+		gbcCenter.gridy = 0;
+		gbcCenter.anchor = GridBagConstraints.WEST;
 		JLabel companyLabel = new JLabel("Unternehmen:");
-		centerPanel.add(companyLabel);
-		
+		centerPanel.add(companyLabel, gbcCenter);
+
+		gbcCenter.gridx = 1;
+		gbcCenter.gridy = 0;
+		gbcCenter.gridwidth = 2;
 		JTextField companyField = new JTextField(20);
-		centerPanel.add(companyField);
-		
-		//Themen Feld
-		JLabel topicLabel = new JLabel("Themen:");
-		centerPanel.add(topicLabel);
-		
+		centerPanel.add(companyField, gbcCenter);
+
+		//Thema Feld
+		gbcCenter.gridx = 0;
+		gbcCenter.gridy = 1;
+		gbcCenter.gridwidth = 1;
+		gbcCenter.anchor = GridBagConstraints.NORTHWEST;
+		JLabel topicLabel = new JLabel("Thema:");
+		centerPanel.add(topicLabel, gbcCenter);
+
+		gbcCenter.gridx = 1;
+		gbcCenter.gridy = 1;
+		gbcCenter.gridwidth = 2;
+		gbcCenter.fill = GridBagConstraints.BOTH;
 		JTextArea topicField = new JTextArea(5, 20);
 		topicField.setLineWrap(true);
 		topicField.setWrapStyleWord(true);
 		JScrollPane topicScrollPane = new JScrollPane(topicField);
-		centerPanel.add(topicScrollPane);
-		
+		centerPanel.add(topicScrollPane, gbcCenter);
+
 		cardStudentErstanmeldung.add(centerPanel, BorderLayout.CENTER);
-        
+
         /////////////////////////////////////////////////////////
         // Code zu Student Panel
         /////////////////////////////////////////////////////////
