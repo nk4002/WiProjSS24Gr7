@@ -264,6 +264,29 @@ public class DatabaseManager {
         }
         return null;
     }
+    
+    //Sucht nach Student mit MNr und setzt ProfID auf Parameter.
+    public static void setProfID(int profId, int MNr) {
+        String updateQuery = "UPDATE studenten SET ProfID = ? WHERE Mnr = ?";
+        
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(updateQuery)) {
+            
+            pstmt.setInt(1, profId);
+            pstmt.setInt(2, MNr);
+            
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                logger.info("ProfID erfolgreich in DB gesetzt: " + MNr);
+            } else {
+                logger.warning("Kein Student in DB gefunden: " + MNr);
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            logger.severe("Genereller Fehler bei Setzung ProfID: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
     // Neue Methode, um die Professor-Daten abzurufen
     public static List<String[]> getProfessorData() {

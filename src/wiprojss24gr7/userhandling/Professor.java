@@ -27,7 +27,11 @@ public class Professor extends User {
 	    userDetails.append("Nachname: ").append(getNachname()).append("\n");
 	    userDetails.append("Fakultät: ").append(fakultaet).append("\n");
 	    userDetails.append("Fachbereich: ").append(fachBereich).append("\n");
-	    userDetails.append("Büro: ").append(buero).append("\n\n");
+	    userDetails.append("Büro: ").append(buero).append("\n");
 	    return userDetails.toString();
+	}
+	
+	public int getProfID() {
+		return PK;
 	}
 }
