@@ -214,7 +214,6 @@ public class DatabaseManager {
         }
     }
 
- 
     public static List<String> getStudentenWithNoTutor() {
         List<String> users = new ArrayList<>();
 
