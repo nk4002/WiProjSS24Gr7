@@ -198,7 +198,6 @@ public class DatabaseManager {
         return users;
     }
 
-
     //Utilitäre Methode um Dopplung zu vermeiden.
     //Platzhalter
     private static boolean isEmpty(String str) {

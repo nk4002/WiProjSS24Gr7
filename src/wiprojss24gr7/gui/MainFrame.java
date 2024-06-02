@@ -497,36 +497,42 @@ public class MainFrame extends JFrame {
 
         private static final Logger logger = Logger.getLogger(MainFrame.class.getName());
 
-        public static void handleLogin(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel, JTextField usernameField, JPasswordField passwordField, DefaultListModel<String> modelA, DefaultListModel<String> modelB, DefaultListModel<String> modelC) {
+        @SafeVarargs
+		public static void handleLogin(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel, JTextField usernameField, JPasswordField passwordField, DefaultListModel<String>... models) {
             String cardName = authenticateUser(usernameField.getText(), new String(passwordField.getPassword()));
-            switchCard(cardLayout, cardsPanel, cardName, modelA, modelB, modelC);
+            switchCard(cardLayout, cardsPanel, cardName, models);
             clearFields(usernameField, passwordField);
         }
 
         public static void handleLogout(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel) {
             User.setLoggedInuser(null);
-            switchCard(cardLayout, cardsPanel, "CardLogIn", null, null, null);
+            switchCard(cardLayout, cardsPanel, "CardLogIn");
             UserService.delSL();
         }
-
+        
         private static String authenticateUser(String username, String password) {
             String role = DatabaseManager.getRole(username, password);
             logger.log(Level.INFO, "User authenticated: {0}", username);
             return role;
         }
 
-        private static void switchCard(CardLayout cardLayout, JPanel cardsPanel, String cardName, DefaultListModel<String> modelA, DefaultListModel<String> modelB, DefaultListModel<String> modelC) {
+
+        @SafeVarargs
+		private static void switchCard(CardLayout cardLayout, JPanel cardsPanel, String cardName, DefaultListModel<String>... models) {
             cardLayout.show(cardsPanel, cardName);
-            if (modelA != null && modelB != null && modelC != null) {
-                controlPopulateList(modelA, modelB, modelC);
+            if (models != null && models.length == 3) {
+                controlPopulateList(models[0], models[1], models[2]);
             }
         }
 
-        private static void controlPopulateList(DefaultListModel<String> modelA, DefaultListModel<String> modelB, DefaultListModel<String> modelC) {
+        @SafeVarargs
+		private static void controlPopulateList(DefaultListModel<String>... models) {
             if (User.getLoggedInuser() instanceof Ppa) {
-                populateUserList(modelA, "studenten", false);
-                populateUserList(modelB, "professoren", false);
-                populateUserList(modelC, "studenten", true);
+                if (models != null && models.length == 3) {
+                    populateUserList(models[0], "studenten", false);
+                    populateUserList(models[1], "professoren", false);
+                    populateUserList(models[2], "studenten", true);
+                }
             }
         }
 
