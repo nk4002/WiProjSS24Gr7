@@ -35,6 +35,8 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import wiprojss24gr7.database.DatabaseManager;
@@ -63,6 +65,13 @@ public class MainFrame extends JFrame {
     DefaultListModel<String> professorListModelTab2;
 
     public static void main(String[] args) {
+    	
+    	try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    	
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
@@ -302,7 +311,7 @@ public class MainFrame extends JFrame {
         studentListPpa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         studentListPpa.setFont(new Font("Arial", Font.PLAIN, 12));
         studentListPpa.setBorder(BorderFactory.createTitledBorder("Studenten"));
-        studentListPpa.setPreferredSize(new Dimension(200, 300));//Ich Setze die größe einfach direkt selber Swing ist ein Mülleimer sonst.
+        studentListPpa.setPreferredSize(new Dimension(250, 300));//Ich Setze die größe einfach direkt selber Swing ist ein Mülleimer sonst.
 
         JTextArea textAreaStudentPpa = new JTextArea();
         textAreaStudentPpa.setEditable(false);
