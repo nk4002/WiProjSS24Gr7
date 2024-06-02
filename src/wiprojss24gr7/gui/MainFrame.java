@@ -524,20 +524,19 @@ public class MainFrame extends JFrame {
 
         private static void controlPopulateList(DefaultListModel<String> modelA, DefaultListModel<String> modelB, DefaultListModel<String> modelC) {
             if (User.getLoggedInuser() instanceof Ppa) {
-                populateFullList(modelA, "studenten");
-                populateFullList(modelB, "professoren");
-                populateStudentNoTutorList(modelC, "studenten");
+                populateUserList(modelA, "studenten", false);
+                populateUserList(modelB, "professoren", false);
+                populateUserList(modelC, "studenten", true);
             }
         }
 
-        private static void populateFullList(DefaultListModel<String> listModel, String tableName) {
-            UserService.populateUserList(listModel, tableName);
-            logger.log(Level.INFO, "Populated list model: {0}", tableName);
-        }
-
-        private static void populateStudentNoTutorList(DefaultListModel<String> listModel, String tableName) {
-            UserService.populateStudentNoTutorList(listModel, tableName);
-            logger.log(Level.INFO, "Populated student list model without tutor: {0}", tableName);
+        private static void populateUserList(DefaultListModel<String> listModel, String tableName, boolean noTutor) {
+            UserService.populateUserList(listModel, tableName, noTutor);
+            if (noTutor) {
+                logger.log(Level.INFO, "Populated student list model without tutor: {0}", tableName);
+            } else {
+                logger.log(Level.INFO, "Populated list model: {0}", tableName);
+            }
         }
 
         private static void clearFields(JTextField usernameField, JPasswordField passwordField) {

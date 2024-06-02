@@ -148,14 +148,24 @@ public class DatabaseManager {
     }
     
     //Geändert am 29.05 von if else auf switch + check ob Aktiviert oder nicht.
-    public static List<String> getUsers(String tableName) {
+    public static List<String> getUsers(String tableName, boolean noTutor) {
         List<String> users = new ArrayList<>();
+        String sql;
 
-        String sql = switch (tableName) {
-            case "studenten" -> "SELECT * FROM studenten";
-            case "professoren" -> "SELECT ProfID, Vorname, Name FROM professoren";
-            default -> throw new IllegalArgumentException("Invalid table name: " + tableName);
-        };
+        switch (tableName) {
+            case "studenten":
+                if (noTutor) {
+                    sql = "SELECT MNr, Vorname, Name FROM studenten WHERE ProfID IS NULL";
+                } else {
+                    sql = "SELECT MNr, Vorname, Name, Aktiviert FROM studenten";
+                }
+                break;
+            case "professoren":
+                sql = "SELECT ProfID, Vorname, Name FROM professoren";
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid table name: " + tableName);
+        }
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -164,24 +174,21 @@ public class DatabaseManager {
             while (rs.next()) {
                 String userName = rs.getString("Vorname") + " " + rs.getString("Name");
 
-                // Check if the table name is "studenten" before accessing "Firma" and "Thema"
                 if ("studenten".equals(tableName)) {
-                    if (rs.getBoolean("Aktiviert")==false) {
-                        userName += "(Nicht Aktiviert!)";
+                    if (noTutor) {
+                        int mnr = rs.getInt("MNr");
+                        UserService.addSLNoTutor(mnr);
+                    } else {
+                        if (!rs.getBoolean("Aktiviert")) {
+                            userName += " (Nicht Aktiviert!)";
+                        }
+                        UserService.addSL(rs.getInt("MNr"));
                     }
+                } else if ("professoren".equals(tableName)) {
+                    UserService.addPL(rs.getInt("ProfID"));
                 }
 
                 users.add(userName);
-
-                // Handle user-specific data
-                switch (tableName) {
-                    case "studenten":
-                        UserService.addSL(rs.getInt("MNr"));
-                        break;
-                    case "professoren":
-                        UserService.addPL(rs.getInt("ProfID"));
-                        break;
-                }
             }
 
         } catch (SQLException | ClassNotFoundException e) {
@@ -190,6 +197,7 @@ public class DatabaseManager {
 
         return users;
     }
+
 
     //Utilitäre Methode um Dopplung zu vermeiden.
     //Platzhalter
@@ -215,30 +223,6 @@ public class DatabaseManager {
         } catch (SQLException e) {
             logger.severe("Error activating student: " + e.getMessage());
         }
-    }
-
-    public static List<String> getStudentenWithNoTutor() {
-        List<String> users = new ArrayList<>();
-
-        String sql = "SELECT MNr, Vorname, Name FROM studenten WHERE ProfID IS NULL";
-
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                String userName = rs.getString("Vorname") + " " + rs.getString("Name");
-                users.add(userName);
-                int mnr = rs.getInt("MNr");
-                UserService.addSLNoTutor(mnr);
-            }
-
-        } catch (SQLException | ClassNotFoundException e) {
-            logger.severe("Error fetching studenten with no tutor: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return users;
     }
 
     public static User getUserByPk(int pk) throws ClassNotFoundException, SQLException {

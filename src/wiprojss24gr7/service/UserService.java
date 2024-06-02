@@ -13,21 +13,14 @@ public class UserService {
 	private static List<Integer> SLNoTutor = new ArrayList<>();
 	private static List<Integer> PL = new ArrayList<>();
 	
-	public static void populateUserList(DefaultListModel<String> listModel, String listType) {
-        List<String> Names = DatabaseManager.getUsers(listType);
-        listModel.clear();
-        for (String user : Names) {
-            listModel.addElement(user);
-        }
-    }
-	
-	public static void populateStudentNoTutorList(DefaultListModel<String> listModel, String listType) {
-        List<String> Names = DatabaseManager.getStudentenWithNoTutor();
-        listModel.clear();
-        for (String user : Names) {
-            listModel.addElement(user);
-        }
-    }
+	public static void populateUserList(DefaultListModel<String> listModel, String listType, boolean noTutor) {
+	    List<String> names = DatabaseManager.getUsers(listType, noTutor);
+
+	    listModel.clear();
+	    for (String user : names) {
+	        listModel.addElement(user);
+	    }
+	}
 
 	public static List<Integer> getSL() {
 		return SL;
