@@ -27,10 +27,29 @@ public class DatabaseManager {
     
     private static final Logger logger = Logger.getLogger(DatabaseManager.class.getName());
 
+    private static Connection connection;
+
+    private DatabaseManager() {
+        // private constructor to prevent instantiation
+    }
+
     public static Connection getConnection() throws ClassNotFoundException, SQLException {
-        Class.forName(DRIVER);
-        return DriverManager.getConnection(URL + DB_NAME, USERNAME, PASSWORD);
-    } 
+        if (connection == null || connection.isClosed()) {
+            Class.forName(DRIVER);
+            connection = DriverManager.getConnection(URL + DB_NAME, USERNAME, PASSWORD);
+        }
+        return connection;
+    }
+
+    public static void closeConnection() {
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
     
     public static String getRole(String username, String password) {
         String hashedPassword;
@@ -40,7 +59,7 @@ public class DatabaseManager {
             e.printStackTrace();
             return null;
         }
-        
+
         System.out.println(hashedPassword);
         String studentQuery = "SELECT MNr, Firma, Thema, Aktiviert FROM studenten WHERE Benutzername = ? AND Passwort = ?";
         String professorQuery = "SELECT ProfID FROM professoren WHERE Benutzername = ? AND Passwort = ?";
@@ -102,7 +121,7 @@ public class DatabaseManager {
 
         return null;
     }
-    
+
     public static void logIn(int PK, String userType) {
         logger.info("Versucht logIn mit PK: " + PK);
         try (Connection conn = getConnection()) {
@@ -146,6 +165,7 @@ public class DatabaseManager {
             e.printStackTrace();
         }
     }
+
     
     //Geändert am 29.05 von if else auf switch + check ob Aktiviert oder nicht.
     public static List<String> getUsers(String tableName, boolean noTutor) {
