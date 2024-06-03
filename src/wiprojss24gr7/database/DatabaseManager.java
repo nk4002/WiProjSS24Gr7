@@ -30,7 +30,7 @@ public class DatabaseManager {
     private static Connection connection;
 
     private DatabaseManager() {
-        // private constructor to prevent instantiation
+    	
     }
 
     public static Connection getConnection() throws ClassNotFoundException, SQLException {
@@ -87,12 +87,12 @@ public class DatabaseManager {
 
                         if (isEmpty(firma) && isEmpty(thema)) {
                             logIn(mNr, "studenten");
-                            return "CardStudentErstanmeldung"; // Student found but Firma and Thema are empty
-                        } else if (!aktiviert) { // aktiviert == false
+                            return "CardStudentErstanmeldung"; //Student ohne Firma und Thema
+                        } else if (!aktiviert) { //aktiviert == false
                             return null;
                         } else {
                             logIn(mNr, "studenten");
-                            return "CardStudent"; // Student found with Firma and Thema
+                            return "CardStudent"; //Student aktiviert und mit Thema u. Firma.
                         }
                     }
                 }

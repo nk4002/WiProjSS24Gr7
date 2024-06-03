@@ -507,6 +507,7 @@ public class MainFrame extends JFrame {
         public static void handleLogout(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel) {
             User.setLoggedInuser(null);
             switchCard(cardLayout, cardsPanel, "CardLogIn");
+            DatabaseManager.closeConnection();
             UserService.delSL();
         }
         
