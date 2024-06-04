@@ -64,7 +64,7 @@ public class MainFrame extends JFrame {
     DefaultListModel<String> studentListModelTab2Ppa;
     DefaultListModel<String> professorListModelTab2;
 
-    public static void main(String[] args) {
+  public static void main(String[] args) {
     	
     	try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -269,200 +269,28 @@ public class MainFrame extends JFrame {
         
         // Tab 1 mit einer Tabelle
         JPanel tab1Panel = new JPanel(new BorderLayout());
-        String[] spaltenNamen = {"Vorname und Name", "ProfID", "Firma", "Thema"};
+        String[] spaltenNamen = {"Vorname und Name", "MNr", "Firma", "Thema"};
         
         DefaultTableModel tableModel = new DefaultTableModel(spaltenNamen, 0);
         JTable tabelle = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(tabelle);
         tab1Panel.add(scrollPane, BorderLayout.CENTER);
 
-        tabbedPaneP.addTab("Tab 1", tab1Panel);
-        tabbedPaneP.addTab("Tab 2", new JPanel());
-        tabbedPaneP.addTab("Tab 3", new JPanel());
+        // Hinzufügen des Zuweisen-Buttons
+        JButton zuweisenButton = new JButton("Zuweisen");
+        zuweisenButton.addActionListener(e -> handleAssignButton(tabelle, tableModel));
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(zuweisenButton);
+        tab1Panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        tabbedPaneP.addTab("Studentenliste", tab1Panel);
         cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
 
-        loadDataIntoTable(tableModel);
-
-        /////////////////////////////////////////////////////////
-        // Code zu Ppa Panel
-        /////////////////////////////////////////////////////////
-
-        //Geändert am 01.07 Gui Style + fix von Textfeld Größe
-        //Top Panel für Button und Label werden mit BorderLayout recht und links platziert.
-        JPanel topPanelPpa = new JPanel(new BorderLayout());
-        topPanelPpa.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        JLabel PpaLabel = new JLabel("Ppa Label");
-        PpaLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        topPanelPpa.add(PpaLabel, BorderLayout.WEST);
-
-        JButton abmeldenPpa = new JButton("Abmelden");
-        abmeldenPpa.setPreferredSize(new Dimension(120, 30));
-        topPanelPpa.add(abmeldenPpa, BorderLayout.EAST);
-
-        cardPpa.add(topPanelPpa, BorderLayout.NORTH);
-
-        JTabbedPane tabbedPanePpa = new JTabbedPane();
-        tabbedPanePpa.setFont(new Font("Arial", Font.PLAIN, 12));
-
-        //Tab 1: Studentenverwaltung
-        studentListPpaModel = new DefaultListModel<>();
-        JList<String> studentListPpa = new JList<>(studentListPpaModel);
-        studentListPpa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        studentListPpa.setFont(new Font("Arial", Font.PLAIN, 12));
-        studentListPpa.setBorder(BorderFactory.createTitledBorder("Studenten"));
-        studentListPpa.setPreferredSize(new Dimension(250, 300));//Ich Setze die größe einfach direkt selber Swing ist ein Mülleimer sonst.
-
-        JTextArea textAreaStudentPpa = new JTextArea();
-        textAreaStudentPpa.setEditable(false);
-        textAreaStudentPpa.setFont(new Font("Arial", Font.PLAIN, 12));
-        textAreaStudentPpa.setBorder(BorderFactory.createTitledBorder("Student Details"));
-        JScrollPane scrollPaneStudentPpa = new JScrollPane(textAreaStudentPpa);
-
-        studentListPpa.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 1) {
-                    Controller.handleMouseClick(studentListPpa, textAreaStudentPpa, "studentList");
-                }
-            }
-        });
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JProgressBar progressBarStudent = new JProgressBar(0, 100);
-        progressBarStudent.setStringPainted(true);
-        progressBarStudent.setString("Beispiel");
-        progressBarStudent.setPreferredSize(new Dimension(200, 20));
-
-        JButton button1Ppa = new JButton("Button 1");
-        JButton button2Ppa = new JButton("Button 2");
-        JButton buttonAktivieren = new JButton("Aktivieren");
-
-        button1Ppa.setPreferredSize(new Dimension(120, 25));
-        button2Ppa.setPreferredSize(new Dimension(120, 25));
-        buttonAktivieren.setPreferredSize(new Dimension(120, 25));
-
-        buttonPanel.add(progressBarStudent);
-        buttonPanel.add(button1Ppa);
-        buttonPanel.add(button2Ppa);
-        buttonPanel.add(buttonAktivieren);
-
-        buttonAktivieren.addActionListener(e -> {
-            Student selectedStudent = (Student) Student.getSelectedUser();
-            if (selectedStudent.isAktiviert()) {
-                return;
-            } else {
-                selectedStudent.setAktiviert(true);
-                try {
-                    DatabaseManager.activateStudent();
-                    Controller.updateLists(studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa);
-                } catch (ClassNotFoundException e1) {
-                    e1.printStackTrace();
-                }
-            }
-        });
-
-        JPanel tabPanelPpa = new JPanel(new BorderLayout(10, 10));
-        tabPanelPpa.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        tabPanelPpa.add(new JScrollPane(studentListPpa), BorderLayout.WEST);
-        tabPanelPpa.add(scrollPaneStudentPpa, BorderLayout.CENTER);
-        tabPanelPpa.add(buttonPanel, BorderLayout.SOUTH);
-
-        tabbedPanePpa.addTab("Studentenverwaltung", tabPanelPpa);
-        Controller.tabSwitchListener(tabbedPanePpa);
-
-        //Tab 2: Betreuerverwaltung
-        studentListModelTab2Ppa = new DefaultListModel<>();
-        JList<String> studentListTab2Ppa = new JList<>(studentListModelTab2Ppa);
-        studentListTab2Ppa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        studentListTab2Ppa.setFont(new Font("Arial", Font.PLAIN, 12));
-        studentListTab2Ppa.setBorder(BorderFactory.createTitledBorder("Studenten ohne Betreuer"));
-        studentListTab2Ppa.setPreferredSize(new Dimension(150, 300));//Selbiges hier.
-
-        JTextArea studentDetailTextAreaTab2 = new JTextArea();
-        studentDetailTextAreaTab2.setEditable(false);
-        studentDetailTextAreaTab2.setFont(new Font("Arial", Font.PLAIN, 12));
-        studentDetailTextAreaTab2.setBorder(BorderFactory.createTitledBorder("Student Details"));
-        JScrollPane studentDetailScrollPaneTab2Ppa = new JScrollPane(studentDetailTextAreaTab2);
-        studentDetailScrollPaneTab2Ppa.setPreferredSize(new Dimension(300, 150));//Hier besonders wichtig weil sonst das Textfeld nicht die richtige Größe hat.
-
-        studentListTab2Ppa.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 1) {
-                    Controller.handleMouseClick(studentListTab2Ppa, studentDetailTextAreaTab2, "studentListNoTutor");
-                }
-            }
-        });
-
-        professorListModelTab2 = new DefaultListModel<>();
-        JList<String> professorListTab2Ppa = new JList<>(professorListModelTab2);
-        professorListTab2Ppa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        professorListTab2Ppa.setFont(new Font("Arial", Font.PLAIN, 12));
-        professorListTab2Ppa.setBorder(BorderFactory.createTitledBorder("Professoren"));
-        professorListTab2Ppa.setPreferredSize(new Dimension(150, 300));//Selbiges hier.
-
-        JTextArea professorDetailTextAreaTab2 = new JTextArea();
-        professorDetailTextAreaTab2.setEditable(false);
-        professorDetailTextAreaTab2.setFont(new Font("Arial", Font.PLAIN, 12));
-        professorDetailTextAreaTab2.setBorder(BorderFactory.createTitledBorder("Professor Details"));
-        JScrollPane professorDetailScrollPaneTab2Ppa = new JScrollPane(professorDetailTextAreaTab2);
-        professorDetailScrollPaneTab2Ppa.setPreferredSize(new Dimension(300, 150));//Selbiges hier.
-        
-        professorListTab2Ppa.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 1) {
-                    Controller.handleMouseClick(professorListTab2Ppa, professorDetailTextAreaTab2, "professorList");
-                }
-            }
-        });
-
-        JButton zuweiseButton = new JButton("Zuweisen");
-        zuweiseButton.setPreferredSize(new Dimension(120, 25));
-        
-        zuweiseButton.addActionListener(e -> {
-            Controller.setBetreuer();
-            Controller.updateLists(studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa);
-        });
-        
-        JPanel studentPanelTab2Ppa = new JPanel(new BorderLayout(10, 10));
-        studentPanelTab2Ppa.add(new JScrollPane(studentListTab2Ppa), BorderLayout.CENTER);
-        studentPanelTab2Ppa.add(studentDetailScrollPaneTab2Ppa, BorderLayout.SOUTH);
-
-        JPanel professorPanelTab2Ppa = new JPanel(new BorderLayout(10, 10));
-        professorPanelTab2Ppa.add(new JScrollPane(professorListTab2Ppa), BorderLayout.CENTER);
-        professorPanelTab2Ppa.add(professorDetailScrollPaneTab2Ppa, BorderLayout.SOUTH);
-
-        JPanel mainPanelTab2Ppa = new JPanel(new GridLayout(1, 2, 10, 10));
-        mainPanelTab2Ppa.add(studentPanelTab2Ppa);
-        mainPanelTab2Ppa.add(professorPanelTab2Ppa);
-
-        JPanel tabPanel2Ppa = new JPanel(new BorderLayout(10, 10));
-        tabPanel2Ppa.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        tabPanel2Ppa.add(mainPanelTab2Ppa, BorderLayout.CENTER);
-        tabPanel2Ppa.add(zuweiseButton, BorderLayout.SOUTH);
-
-        tabbedPanePpa.addTab("Betreuerverwaltung", tabPanel2Ppa);
-        
-        abmeldenPpa.addActionListener(e -> {
-            Controller.handleLogout(e, cardLayout, cardsPanel);
-            Controller.clearTextAreas(textAreaStudentPpa, professorDetailTextAreaTab2, studentDetailTextAreaTab2);
-        });
-
-        cardPpa.add(tabbedPanePpa, BorderLayout.CENTER);
+        loadInactiveStudentDataIntoTable(tableModel); // Aufruf der Methode zur Initialisierung der Tabelle
 
         contentPane.add(cardsPanel, BorderLayout.CENTER);
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    private void loadDataIntoTable(DefaultTableModel tableModel) {
-        List<String[]> data = DatabaseManager.getProfessorData(); 
-        for (String[] row : data) {
-            tableModel.addRow(row);
-        }
-    }
-    
     /////////////////////////////////////////////////////////
     // Methode für den bestätigen Button bei Studenterstanmeldung
     /////////////////////////////////////////////////////////
@@ -634,5 +462,35 @@ public class MainFrame extends JFrame {
 			logger.log(Level.INFO, "Zuweisung erfolgreich.");
         }
         
+    }
+
+    private void loadInactiveStudentDataIntoTable(DefaultTableModel tableModel) {
+        List<Student> students = DatabaseManager.getAllInactiveStudents();
+        for (Student student : students) {
+            Object[] rowData = {
+                student.getVorname() + " " + student.getNachname(),
+                student.getPK(),
+                student.getFirma(),
+                student.getThema()
+            };
+            tableModel.addRow(rowData);
+        }
+    }
+
+    private void handleAssignButton(JTable table, DefaultTableModel tableModel) {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Bitte wählen Sie einen Studenten aus der Liste aus.", "Keine Auswahl", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int studentMNr = (int) tableModel.getValueAt(selectedRow, 1); // Annahme: MNr ist in der zweiten Spalte
+        int professorId = User.getLoggedInuser().getPK();
+
+        DatabaseManager.assignStudentToProfessor(studentMNr, professorId);
+        
+        // Aktualisieren der Tabelle
+        tableModel.setRowCount(0); // Leeren der Tabelle
+        loadInactiveStudentDataIntoTable(tableModel); // Neuladen der Tabelle mit den aktuellen Daten
     }
 }
