@@ -18,6 +18,10 @@ public class User {
 		this.Vorname = vorname;
 		this.Nachname = nachname;
 	}
+	
+	public String getClassName() {
+        return null;
+    }
 
 	@Override
 	public String toString() {
@@ -79,6 +83,10 @@ public class User {
 	
 	public String printUserDetails() {
 		return null;
+	}
+
+	public boolean isAktiviert() {
+		return false;
 	}
 	
 }

@@ -15,7 +15,11 @@ public class Student extends User {
 		this.aktiviert = aktiviert;
 		this.setProfID(profID);
 	}
-
+	
+	@Override
+	public String getClassName() {
+        return "Student";
+    }
 	
 	@Override
 	public String toString() {
@@ -70,6 +74,7 @@ public class Student extends User {
 		this.profID = profID;
 	}
 
+	@Override
 	public boolean isAktiviert() {
 		return aktiviert;
 	}

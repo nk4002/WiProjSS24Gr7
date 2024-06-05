@@ -89,7 +89,7 @@ public class DatabaseManager {
                             logIn(mNr, "studenten");
                             return "CardStudentErstanmeldung"; //Student ohne Firma und Thema
                         } else if (!aktiviert) { //aktiviert == false
-                            return null;
+                            return "nicht Aktiviert";
                         } else {
                             logIn(mNr, "studenten");
                             return "CardStudent"; //Student aktiviert und mit Thema u. Firma.
@@ -174,7 +174,7 @@ public class DatabaseManager {
         switch (tableName) {
             case "studenten":
                 if (noTutor) {
-                    sql = "SELECT MNr, Vorname, Name FROM studenten WHERE ProfID IS NULL";
+                	sql = "SELECT MNr, Vorname, Name, Aktiviert FROM studenten WHERE ProfID IS NULL AND Aktiviert = 0";
                 } else {
                     sql = "SELECT MNr, Vorname, Name, Aktiviert FROM studenten";
                 }
@@ -183,7 +183,7 @@ public class DatabaseManager {
                 sql = "SELECT ProfID, Vorname, Name FROM professoren";
                 break;
             default:
-                throw new IllegalArgumentException("Invalid table name: " + tableName);
+                throw new IllegalArgumentException("Ungültiger Tabellen Name: " + tableName);
         }
 
         try (Connection conn = getConnection();
@@ -234,12 +234,12 @@ public class DatabaseManager {
             int rowsUpdated = pstmt.executeUpdate();
             
             if (rowsUpdated > 0) {
-                logger.info("Student activated successfully. MNr: " + mNr);
+                logger.info("Student erfolgreich Aktiviert MNr: " + mNr);
             } else {
-                logger.warning("No student found with the given MNr: " + mNr);
+                logger.warning("Kein Student mit angegebener MNr: " + mNr);
             }
         } catch (SQLException e) {
-            logger.severe("Error activating student: " + e.getMessage());
+            logger.severe("Fehler bei Aktivierung: " + e.getMessage());
         }
     }
 
@@ -326,18 +326,19 @@ public class DatabaseManager {
             stmt.setInt(3, user.getPK()); // PK = MNr
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0) {
-                logger.log(Level.INFO, "Student data saved successfully for user with PK: {0}", user.getPK());
+                logger.log(Level.INFO, "Studentendaten erfolgreich für Benutzer mit PK: {0} gespeichert", user.getPK());
             } else {
-                logger.log(Level.WARNING, "No student record found for user with PK: {0}", user.getPK());
+                logger.log(Level.WARNING, "Kein Studenteneintrag gefunden für Benutzer mit PK: {0}", user.getPK());
             }
         } catch (ClassNotFoundException e) {
-            logger.log(Level.SEVERE, "Database driver not found", e);
-            throw new SQLException("Unable to load database driver", e);
+            logger.log(Level.SEVERE, "Datenbanktreiber nicht gefunden", e);
+            throw new SQLException("Datenbanktreiber konnte nicht geladen werden", e);
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Error saving student data", e);
+            logger.log(Level.SEVERE, "Fehler beim Speichern der Studentendaten", e);
             throw e;
         }
     }
+
 
     public static List<Student> getAllInactiveStudents() {
         List<Student> students = new ArrayList<>();

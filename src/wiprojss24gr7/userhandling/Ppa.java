@@ -13,6 +13,16 @@ public class Ppa extends User{
 		this.einrichtung = einrichtung;
 		
 	}
+	
+	@Override
+	public String getClassName() {
+        return "Ppa";
+    }
+	
+	@Override
+	public String showGreetings() {
+		return "Eingeloggt als PPA der HFT Stuttgart";
+	}
 
 	public User getUser() {
         return User;

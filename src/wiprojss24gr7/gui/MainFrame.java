@@ -9,6 +9,7 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.HeadlessException;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -35,6 +36,7 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
@@ -42,13 +44,14 @@ import javax.swing.table.DefaultTableModel;
 import wiprojss24gr7.database.DatabaseManager;
 import wiprojss24gr7.service.UserService;
 import wiprojss24gr7.userhandling.Ppa;
+import wiprojss24gr7.userhandling.Professor;
 import wiprojss24gr7.userhandling.Student;
 import wiprojss24gr7.userhandling.User;
 
 public class MainFrame extends JFrame {
 
     private static final long serialVersionUID = 1L;
-    private JPanel contentPane;
+    private static JPanel contentPane;
     private CardLayout cardLayout;
     private JPanel cardsPanel;
     private JPanel cardLogIn;
@@ -63,6 +66,7 @@ public class MainFrame extends JFrame {
     DefaultListModel<String> studentListPpaModel;
     DefaultListModel<String> studentListModelTab2Ppa;
     DefaultListModel<String> professorListModelTab2;
+    private static JLabel loginLabel, studentLabel, profLabel, ppaLabel;
 
   public static void main(String[] args) {
     	
@@ -117,9 +121,19 @@ public class MainFrame extends JFrame {
 
         cardLogIn.setLayout(new GridBagLayout());
 
+        GridBagConstraints gbcLabel = new GridBagConstraints();
+        gbcLabel.gridx = 0;
+        gbcLabel.gridy = 0;
+        gbcLabel.fill = GridBagConstraints.HORIZONTAL;
+        gbcLabel.anchor = GridBagConstraints.NORTH;
+        gbcLabel.insets = new Insets(20, 5, 25, 5); 
+        loginLabel = new JLabel("Melden sie sich mit Ihren Benutzerdaten an.", SwingConstants.CENTER); 
+        cardLogIn.add(loginLabel, gbcLabel);
+        loginLabel.setPreferredSize(new Dimension(300, loginLabel.getPreferredSize().height));
+
         GridBagConstraints gbcUsername = new GridBagConstraints();
         gbcUsername.gridx = 0;
-        gbcUsername.gridy = 0;
+        gbcUsername.gridy = 1;
         gbcUsername.fill = GridBagConstraints.HORIZONTAL;
         gbcUsername.anchor = GridBagConstraints.NORTH;
         gbcUsername.insets = new Insets(5, 5, 5, 5);
@@ -129,7 +143,7 @@ public class MainFrame extends JFrame {
 
         GridBagConstraints gbcPassword = new GridBagConstraints();
         gbcPassword.gridx = 0;
-        gbcPassword.gridy = 1;
+        gbcPassword.gridy = 2;
         gbcPassword.fill = GridBagConstraints.HORIZONTAL;
         gbcPassword.anchor = GridBagConstraints.NORTH;
         gbcPassword.insets = new Insets(5, 5, 5, 5);
@@ -139,12 +153,14 @@ public class MainFrame extends JFrame {
 
         GridBagConstraints gbcLoginButton = new GridBagConstraints();
         gbcLoginButton.gridx = 0;
-        gbcLoginButton.gridy = 2;
+        gbcLoginButton.gridy = 3;
         gbcLoginButton.fill = GridBagConstraints.HORIZONTAL;
         gbcLoginButton.anchor = GridBagConstraints.NORTH;
         gbcLoginButton.insets = new Insets(5, 5, 5, 5);
         loginButton = new JButton("Login");
         cardLogIn.add(loginButton, gbcLoginButton);
+
+
         loginButton.addActionListener(e -> Controller.handleLogin(e, cardLayout, cardsPanel, usernameField, passwordField, studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa));
 
         /////////////////////////////////////////////////////////
@@ -220,7 +236,7 @@ public class MainFrame extends JFrame {
 		confirmButton.addActionListener(new ActionListener() {
 		    @Override
 		    public void actionPerformed(ActionEvent e) {
-		        handleConfirm(companyField, topicField);
+		        Controller.handleConfirm(companyField, topicField);
 		    }
 		});
 		centerPanel.add(confirmButton, gbcCenter);
@@ -233,7 +249,7 @@ public class MainFrame extends JFrame {
 
         JPanel topPanelS = new JPanel(new BorderLayout());
 
-        JLabel studentLabel = new JLabel("Student Label");
+        studentLabel = new JLabel("Student Label");
         topPanelS.add(studentLabel, BorderLayout.WEST);
 
         JButton abmeldenS = new JButton("Abmelden");
@@ -255,8 +271,8 @@ public class MainFrame extends JFrame {
 
         JPanel topPanelP = new JPanel(new BorderLayout());
 
-        JLabel ProfLabel = new JLabel("Professor Label");
-        topPanelP.add(ProfLabel, BorderLayout.WEST);
+        profLabel = new JLabel("Professor Label");
+        topPanelP.add(profLabel, BorderLayout.WEST);
 
         JButton abmeldenP = new JButton("Abmelden");
         abmeldenP.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
@@ -283,13 +299,13 @@ public class MainFrame extends JFrame {
         
         // Hinzufügen des Zuweisen-Buttons
         JButton zuweisenButton = new JButton("Zuweisen");
-        zuweisenButton.addActionListener(e -> handleAssignButton(tabelle, tableModel));
+        zuweisenButton.addActionListener(e -> Controller.handleAssignButton(tabelle, tableModel));
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(zuweisenButton);
         tab1Panel.add(buttonPanel, BorderLayout.SOUTH);
         
         cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
-        loadInactiveStudentDataIntoTable(tableModel);
+        Controller.loadInactiveStudentDataIntoTable(tableModel);
 
         /////////////////////////////////////////////////////////
         // Code zu Ppa Panel
@@ -300,9 +316,9 @@ public class MainFrame extends JFrame {
         JPanel topPanelPpa = new JPanel(new BorderLayout());
         topPanelPpa.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JLabel PpaLabel = new JLabel("Ppa Label");
-        PpaLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        topPanelPpa.add(PpaLabel, BorderLayout.WEST);
+        ppaLabel = new JLabel("Ppa Label");
+        ppaLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        topPanelPpa.add(ppaLabel, BorderLayout.WEST);
 
         JButton abmeldenPpa = new JButton("Abmelden");
         abmeldenPpa.setPreferredSize(new Dimension(120, 30));
@@ -468,47 +484,32 @@ public class MainFrame extends JFrame {
         contentPane.add(cardsPanel, BorderLayout.CENTER);
     }
 
-
-    /////////////////////////////////////////////////////////
-    // Methode für den bestätigen Button bei Studenterstanmeldung
-    /////////////////////////////////////////////////////////
-    private void handleConfirm(JTextField companyField, JTextArea topicField) {
-        String company = companyField.getText();
-        String topic = topicField.getText();
-
-        System.out.println("Confirm button clicked");
-        System.out.println("Company: " + company);
-        System.out.println("Topic: " + topic);
-
-        if (company.isEmpty() || topic.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "Bitte füllen Sie alle Felder aus", "Fehler",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        // Save data to the database
-        try {
-            DatabaseManager.saveStudentData(User.getLoggedInuser(), company, topic);
-            JOptionPane.showMessageDialog(null, "Stammdaten erfolgreich gespeichert", "Erfolg",
-                    JOptionPane.INFORMATION_MESSAGE);
-            // Optionally, you can switch the card or close the dialog here
-        } catch (SQLException e) {
-            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, e);
-            JOptionPane.showMessageDialog(null, "Fehler beim Speichern der Daten", "Fehler",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
     private static class Controller {
 
         private static final Logger logger = Logger.getLogger(MainFrame.class.getName());
 
         @SafeVarargs
-		public static void handleLogin(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel, JTextField usernameField, JPasswordField passwordField, DefaultListModel<String>... models) {
+        public static void handleLogin(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel, JTextField usernameField, JPasswordField passwordField, DefaultListModel<String>... models) {
             String cardName = authenticateUser(usernameField.getText(), new String(passwordField.getPassword()));
-            switchCard(cardLayout, cardsPanel, cardName, models);
             clearFields(usernameField, passwordField);
+            if (cardName.equals("nicht Aktiviert")) {
+                loginLabel.setText("Account noch nicht Aktiviert");
+            }
+            switchCard(cardLayout, cardsPanel, cardName, models);
         }
+
+        private static String authenticateUser(String username, String password) {
+            String role = DatabaseManager.getRole(username, password);
+            if (role == null) {
+                loginLabel.setText("Ungültiger Nutzername oder Passwort.");
+            } else {
+                showGreetings();
+                logger.log(Level.INFO, "User Authentifiziert: {0}", username);
+                return role;
+            }
+            return null;
+        }
+
 
         public static void handleLogout(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel) {
             User.setLoggedInuser(null);
@@ -516,13 +517,6 @@ public class MainFrame extends JFrame {
             DatabaseManager.closeConnection();
             UserService.delSL();
         }
-        
-        private static String authenticateUser(String username, String password) {
-            String role = DatabaseManager.getRole(username, password);
-            logger.log(Level.INFO, "User authenticated: {0}", username);
-            return role;
-        }
-
 
         @SafeVarargs
 		private static void switchCard(CardLayout cardLayout, JPanel cardsPanel, String cardName, DefaultListModel<String>... models) {
@@ -546,16 +540,16 @@ public class MainFrame extends JFrame {
         private static void populateUserList(DefaultListModel<String> listModel, String tableName, boolean noTutor) {
             UserService.populateUserList(listModel, tableName, noTutor);
             if (noTutor) {
-                logger.log(Level.INFO, "Populated student list model without tutor: {0}", tableName);
+                logger.log(Level.INFO, "Liste Studenten ohne Betreuer gefüllt: {0}", tableName);
             } else {
-                logger.log(Level.INFO, "Populated list model: {0}", tableName);
+                logger.log(Level.INFO, "Modell gefüllt: {0}", tableName);
             }
         }
 
         private static void clearFields(JTextField usernameField, JPasswordField passwordField) {
             usernameField.setText("");
             passwordField.setText("");
-            logger.log(Level.INFO, "login felder geleert.");
+            logger.log(Level.INFO, "Login Felder geleert.");
         }
 
         public static void handleMouseClick(JList<String> list, JTextArea textArea, String listIdentifier) {
@@ -588,20 +582,18 @@ public class MainFrame extends JFrame {
             return null;
         }
 
-        private static int getSelectedPk(int selectedIndex, String listIdentifier) throws ClassNotFoundException, SQLException {
-            switch (listIdentifier) {
-                case "studentList":
-                    return UserService.getSLIndex(selectedIndex);
-                case "studentListNoTutor":
-                    return UserService.getSLNoTutorIndex(selectedIndex);
-                case "professorList":
-                    return UserService.getPLIndex(selectedIndex);
-                default:
-                    logger.log(Level.WARNING, "Unbekannte Liste: {0}", listIdentifier);
-                    return -1;
-            }
+        private static int getSelectedPk(int selectedIndex, String listIdentifier) {
+            return switch (listIdentifier) {
+			    case "studentList" -> UserService.getSLIndex(selectedIndex);
+			    case "studentListNoTutor" -> UserService.getSLNoTutorIndex(selectedIndex);
+			    case "professorList" -> UserService.getPLIndex(selectedIndex);
+			    default -> {
+			        logger.log(Level.WARNING, "Unbekannte Liste: {0}", listIdentifier);
+			        yield -1;
+			    }
+			};
         }
-        
+
         private static void updateLists(DefaultListModel<String> studentListPpaModel, DefaultListModel<String> professorListModelTab2, DefaultListModel<String> studentListModelTab2Ppa) {
         	Controller.controlPopulateList(studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa);
         }
@@ -619,7 +611,19 @@ public class MainFrame extends JFrame {
                 var selectedTabTitle = tabbedPane.getTitleAt(selectedIndex);
                 User.setSelectedUser(null);
                 logger.log(Level.INFO, "User geleert.");
+                
             });
+        }
+        
+        public static void showGreetings() {
+            String role = User.getLoggedInuser().getClassName();
+
+            switch (role) {
+                case "Student" -> studentLabel.setText(User.getLoggedInuser().showGreetings());
+                case "Professor" -> profLabel.setText(User.getLoggedInuser().showGreetings());
+                case "Ppa" -> ppaLabel.setText(User.getLoggedInuser().showGreetings());
+                default -> logger.log(Level.SEVERE, "shit broke");
+            }
         }
         
         //Setzt ProfID bei selektiertem User und in DB.
@@ -639,36 +643,64 @@ public class MainFrame extends JFrame {
             DatabaseManager.setProfID(profId, MNr);
 			logger.log(Level.INFO, "Zuweisung erfolgreich.");
         }
-    }    
+    
+    
+	    private static void handleConfirm(JTextField companyField, JTextArea topicField) {
+	        String company = companyField.getText();
+	        String topic = topicField.getText();
+	
+	        System.out.println("Confirm button clicked");
+	        System.out.println("Company: " + company);
+	        System.out.println("Topic: " + topic);
+	
+	        if (company.isEmpty() || topic.isEmpty()) {
+	            JOptionPane.showMessageDialog(null, "Bitte füllen Sie alle Felder aus", "Fehler",
+	                    JOptionPane.ERROR_MESSAGE);
+	            return;
+	        }
+	
+	        //Daten in DB gespeichert
+	        try {
+	            DatabaseManager.saveStudentData(User.getLoggedInuser(), company, topic);
+	            JOptionPane.showMessageDialog(null, "Stammdaten erfolgreich gespeichert", "Erfolg",
+	                    JOptionPane.INFORMATION_MESSAGE);
+	            
+	        } catch (SQLException e) {
+	            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, e);
+	            JOptionPane.showMessageDialog(null, "Fehler beim Speichern der Daten", "Fehler",
+	                    JOptionPane.ERROR_MESSAGE);
+	        }
+	    }
       
-    private void loadInactiveStudentDataIntoTable(DefaultTableModel tableModel) {
-        List<Student> students = DatabaseManager.getAllInactiveStudents();
-        for (Student student : students) {
-            Object[] rowData = {
-                student.getVorname() + " " + student.getNachname(),
-                student.getPK(),
-                student.getFirma(),
-                student.getThema()
-            };
-            tableModel.addRow(rowData);
-        }
-    }
-
-    private void handleAssignButton(JTable table, DefaultTableModel tableModel) {
-        int selectedRow = table.getSelectedRow();
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Bitte wählen Sie einen Studenten aus der Liste aus.", "Keine Auswahl", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        int studentMNr = (int) tableModel.getValueAt(selectedRow, 1); // Annahme: MNr ist in der zweiten Spalte
-        int professorId = User.getLoggedInuser().getPK();
-
-        DatabaseManager.assignStudentToProfessor(studentMNr, professorId);
-        
-        // Aktualisieren der Tabelle
-        tableModel.setRowCount(0); // Leeren der Tabelle
-        loadInactiveStudentDataIntoTable(tableModel); // Neuladen der Tabelle mit den aktuellen Daten
+	    private static void loadInactiveStudentDataIntoTable(DefaultTableModel tableModel) {
+	        List<Student> students = DatabaseManager.getAllInactiveStudents();
+	        for (Student student : students) {
+	            Object[] rowData = {
+	                student.getVorname() + " " + student.getNachname(),
+	                student.getPK(),
+	                student.getFirma(),
+	                student.getThema()
+	            };
+	            tableModel.addRow(rowData);
+	        }
+	    }
+	
+	    private static void handleAssignButton(JTable table, DefaultTableModel tableModel) throws HeadlessException {
+	        int selectedRow = table.getSelectedRow();
+	        if (selectedRow == -1) {
+	            JOptionPane.showMessageDialog(contentPane, "Bitte wählen Sie einen Studenten aus der Liste aus.", "Keine Auswahl", JOptionPane.WARNING_MESSAGE);
+	            return;
+	        }
+	
+	        int studentMNr = (int) tableModel.getValueAt(selectedRow, 1); // Annahme: MNr ist in der zweiten Spalte
+	        int professorId = User.getLoggedInuser().getPK();
+	
+	        DatabaseManager.assignStudentToProfessor(studentMNr, professorId);
+	        
+	        // Aktualisieren der Tabelle
+	        tableModel.setRowCount(0); // Leeren der Tabelle
+	        loadInactiveStudentDataIntoTable(tableModel); // Neuladen der Tabelle mit den aktuellen Daten
+	    }
     }
 }
 

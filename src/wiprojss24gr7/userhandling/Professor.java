@@ -11,6 +11,11 @@ public class Professor extends User {
 		this.fachBereich = fachBereich;
 		this.buero = buero;
 	}
+	
+	@Override
+	public String getClassName() {
+        return "Professor";
+    }
 
 	@Override
 	public String toString() {
