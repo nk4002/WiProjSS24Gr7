@@ -64,7 +64,7 @@ public class MainFrame extends JFrame {
     DefaultListModel<String> studentListModelTab2Ppa;
     DefaultListModel<String> professorListModelTab2;
 
-    public static void main(String[] args) {
+  public static void main(String[] args) {
     	
     	try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -460,11 +460,15 @@ public class MainFrame extends JFrame {
 
         cardPpa.add(tabbedPanePpa, BorderLayout.CENTER);
 
+        
+
+        tabbedPaneP.addTab("Studentenliste", tab1Panel);
+        cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
+
         contentPane.add(cardsPanel, BorderLayout.CENTER);
     }
 
-    
-    
+
     /////////////////////////////////////////////////////////
     // Methode für den bestätigen Button bei Studenterstanmeldung
     /////////////////////////////////////////////////////////
@@ -636,37 +640,35 @@ public class MainFrame extends JFrame {
 			logger.log(Level.INFO, "Zuweisung erfolgreich.");
         }
     }    
-        private static void loadInactiveStudentDataIntoTable(DefaultTableModel tableModel) {
-            List<Student> students = DatabaseManager.getAllInactiveStudents();
-            System.out.println(students.size());
-            //tableModel.setRowCount(0);
-            for (Student student : students) {
-                Object[] rowData = {
-                    student.getVorname() + " " + student.getNachname(),
-                    student.getPK(),
-                    student.getFirma(),
-                    student.getThema()
-                };
-                tableModel.addRow(rowData);
-            }
+      
+    private void loadInactiveStudentDataIntoTable(DefaultTableModel tableModel) {
+        List<Student> students = DatabaseManager.getAllInactiveStudents();
+        for (Student student : students) {
+            Object[] rowData = {
+                student.getVorname() + " " + student.getNachname(),
+                student.getPK(),
+                student.getFirma(),
+                student.getThema()
+            };
+            tableModel.addRow(rowData);
+        }
+    }
+
+    private void handleAssignButton(JTable table, DefaultTableModel tableModel) {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Bitte wählen Sie einen Studenten aus der Liste aus.", "Keine Auswahl", JOptionPane.WARNING_MESSAGE);
+            return;
         }
 
-        private void handleAssignButton(JTable table, DefaultTableModel tableModel) {
-            int selectedRow = table.getSelectedRow();
-            if (selectedRow == -1) {
-                JOptionPane.showMessageDialog(this, "Bitte wählen Sie einen Studenten aus der Liste aus.", "Keine Auswahl", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
+        int studentMNr = (int) tableModel.getValueAt(selectedRow, 1); // Annahme: MNr ist in der zweiten Spalte
+        int professorId = User.getLoggedInuser().getPK();
 
-            int studentMNr = (int) tableModel.getValueAt(selectedRow, 1); // Annahme: MNr ist in der zweiten Spalte
-            int professorId = User.getLoggedInuser().getPK();
-
-            DatabaseManager.assignStudentToProfessor(studentMNr, professorId);
-
-            // Aktualisieren der Tabelle
-            tableModel.setRowCount(0); // Leeren der Tabelle
-            loadInactiveStudentDataIntoTable(tableModel); // Neuladen der Tabelle mit den aktuellen Daten
-        }
+        DatabaseManager.assignStudentToProfessor(studentMNr, professorId);
         
-    
+        // Aktualisieren der Tabelle
+        tableModel.setRowCount(0); // Leeren der Tabelle
+        loadInactiveStudentDataIntoTable(tableModel); // Neuladen der Tabelle mit den aktuellen Daten
+    }
 }
+

@@ -338,7 +338,7 @@ public class DatabaseManager {
             throw e;
         }
     }
-    
+
     public static List<Student> getAllInactiveStudents() {
         List<Student> students = new ArrayList<>();
         String query = "SELECT MNr, Vorname, Name, Studiengang, Firma, Thema, ProfID, Aktiviert FROM studenten WHERE Aktiviert = false";
@@ -375,7 +375,7 @@ public class DatabaseManager {
 
             pstmt.setInt(1, professorId);
             pstmt.setInt(2, studentMNr);
-
+            
             int rowsAffected = pstmt.executeUpdate();
             if (rowsAffected > 0) {
                 logger.info("Student erfolgreich zugewiesen. MNr: " + studentMNr);
