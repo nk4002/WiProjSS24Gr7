@@ -166,7 +166,6 @@ public class DatabaseManager {
         }
     }
 
-    
     //Geändert am 29.05 von if else auf switch + check ob Aktiviert oder nicht.
     public static List<String> getUsers(String tableName, boolean noTutor) {
         List<String> users = new ArrayList<>();
@@ -337,6 +336,56 @@ public class DatabaseManager {
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Error saving student data", e);
             throw e;
+        }
+    }
+    
+    public static List<Student> getAllInactiveStudents() {
+        List<Student> students = new ArrayList<>();
+        String query = "SELECT MNr, Vorname, Name, Studiengang, Firma, Thema, ProfID, Aktiviert FROM studenten WHERE Aktiviert = false";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                Student student = new Student(
+                    rs.getInt("MNr"),
+                    rs.getString("Vorname"),
+                    rs.getString("Name"),
+                    rs.getString("Studiengang"),
+                    rs.getString("Firma"),
+                    rs.getString("Thema"),
+                    rs.getInt("ProfID"),
+                    rs.getBoolean("Aktiviert")
+                );
+                students.add(student);
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return students;
+    }
+    public static void assignStudentToProfessor(int studentMNr, int professorId) {
+        String updateQuery = "UPDATE studenten SET Aktiviert = true, ProfID = ? WHERE MNr = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(updateQuery)) {
+
+            pstmt.setInt(1, professorId);
+            pstmt.setInt(2, studentMNr);
+
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected > 0) {
+                logger.info("Student erfolgreich zugewiesen. MNr: " + studentMNr);
+            } else {
+                logger.warning("Kein Student in der Datenbank gefunden mit der MNr: " + studentMNr);
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            logger.severe("Fehler beim Zuweisen des Studenten: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

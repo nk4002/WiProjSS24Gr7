@@ -21,8 +21,7 @@ public class Professor extends User {
 	
 	public String printUserDetails() {
 	    StringBuilder userDetails = new StringBuilder();
-	    userDetails.append("Professor Details:\n");
-	    userDetails.append("-----------------\n");
+	    userDetails.append("----------------------\n");
 	    userDetails.append("Vorname: ").append(getVorname()).append("\n");
 	    userDetails.append("Nachname: ").append(getNachname()).append("\n");
 	    userDetails.append("Fakultät: ").append(fakultaet).append("\n");

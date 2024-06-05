@@ -269,19 +269,27 @@ public class MainFrame extends JFrame {
         
         // Tab 1 mit einer Tabelle
         JPanel tab1Panel = new JPanel(new BorderLayout());
-        String[] spaltenNamen = {"Vorname und Name", "ProfID", "Firma", "Thema"};
+        String[] spaltenNamen = {"Vorname und Name", "MNr", "Firma", "Thema"};
         
         DefaultTableModel tableModel = new DefaultTableModel(spaltenNamen, 0);
         JTable tabelle = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(tabelle);
         tab1Panel.add(scrollPane, BorderLayout.CENTER);
 
-        tabbedPaneP.addTab("Tab 1", tab1Panel);
+        tabbedPaneP.addTab("Studentenliste", tab1Panel);
         tabbedPaneP.addTab("Tab 2", new JPanel());
         tabbedPaneP.addTab("Tab 3", new JPanel());
         cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
-
-        loadDataIntoTable(tableModel);
+        
+        // Hinzufügen des Zuweisen-Buttons
+        JButton zuweisenButton = new JButton("Zuweisen");
+        zuweisenButton.addActionListener(e -> handleAssignButton(tabelle, tableModel));
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(zuweisenButton);
+        tab1Panel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
+        loadInactiveStudentDataIntoTable(tableModel);
 
         /////////////////////////////////////////////////////////
         // Code zu Ppa Panel
@@ -328,7 +336,7 @@ public class MainFrame extends JFrame {
             }
         });
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel buttonPanelPpa = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JProgressBar progressBarStudent = new JProgressBar(0, 100);
         progressBarStudent.setStringPainted(true);
         progressBarStudent.setString("Beispiel");
@@ -342,10 +350,10 @@ public class MainFrame extends JFrame {
         button2Ppa.setPreferredSize(new Dimension(120, 25));
         buttonAktivieren.setPreferredSize(new Dimension(120, 25));
 
-        buttonPanel.add(progressBarStudent);
-        buttonPanel.add(button1Ppa);
-        buttonPanel.add(button2Ppa);
-        buttonPanel.add(buttonAktivieren);
+        buttonPanelPpa.add(progressBarStudent);
+        buttonPanelPpa.add(button1Ppa);
+        buttonPanelPpa.add(button2Ppa);
+        buttonPanelPpa.add(buttonAktivieren);
 
         buttonAktivieren.addActionListener(e -> {
             Student selectedStudent = (Student) Student.getSelectedUser();
@@ -366,7 +374,7 @@ public class MainFrame extends JFrame {
         tabPanelPpa.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         tabPanelPpa.add(new JScrollPane(studentListPpa), BorderLayout.WEST);
         tabPanelPpa.add(scrollPaneStudentPpa, BorderLayout.CENTER);
-        tabPanelPpa.add(buttonPanel, BorderLayout.SOUTH);
+        tabPanelPpa.add(buttonPanelPpa, BorderLayout.SOUTH);
 
         tabbedPanePpa.addTab("Studentenverwaltung", tabPanelPpa);
         Controller.tabSwitchListener(tabbedPanePpa);
@@ -455,13 +463,7 @@ public class MainFrame extends JFrame {
         contentPane.add(cardsPanel, BorderLayout.CENTER);
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    private void loadDataIntoTable(DefaultTableModel tableModel) {
-        List<String[]> data = DatabaseManager.getProfessorData(); 
-        for (String[] row : data) {
-            tableModel.addRow(row);
-        }
-    }
+    
     
     /////////////////////////////////////////////////////////
     // Methode für den bestätigen Button bei Studenterstanmeldung
@@ -633,6 +635,38 @@ public class MainFrame extends JFrame {
             DatabaseManager.setProfID(profId, MNr);
 			logger.log(Level.INFO, "Zuweisung erfolgreich.");
         }
+    }    
+        private static void loadInactiveStudentDataIntoTable(DefaultTableModel tableModel) {
+            List<Student> students = DatabaseManager.getAllInactiveStudents();
+            System.out.println(students.size());
+            //tableModel.setRowCount(0);
+            for (Student student : students) {
+                Object[] rowData = {
+                    student.getVorname() + " " + student.getNachname(),
+                    student.getPK(),
+                    student.getFirma(),
+                    student.getThema()
+                };
+                tableModel.addRow(rowData);
+            }
+        }
+
+        private void handleAssignButton(JTable table, DefaultTableModel tableModel) {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow == -1) {
+                JOptionPane.showMessageDialog(this, "Bitte wählen Sie einen Studenten aus der Liste aus.", "Keine Auswahl", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            int studentMNr = (int) tableModel.getValueAt(selectedRow, 1); // Annahme: MNr ist in der zweiten Spalte
+            int professorId = User.getLoggedInuser().getPK();
+
+            DatabaseManager.assignStudentToProfessor(studentMNr, professorId);
+
+            // Aktualisieren der Tabelle
+            tableModel.setRowCount(0); // Leeren der Tabelle
+            loadInactiveStudentDataIntoTable(tableModel); // Neuladen der Tabelle mit den aktuellen Daten
+        }
         
-    }
+    
 }
