@@ -293,12 +293,20 @@ public class MainFrame extends JFrame {
         tab1Panel.add(scrollPane, BorderLayout.CENTER);
 
         tabbedPaneP.addTab("Studentenliste", tab1Panel);
-        tabbedPaneP.addTab("Tab 2", new JPanel());
-        tabbedPaneP.addTab("Tab 3", new JPanel());
+        cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
+        
+        // Tab 2 mit Tabelle
+        JPanel tab2Panel = new JPanel(new BorderLayout());
+        JTable tabelle2 = new JTable(tableModel);
+        JScrollPane scrollPane2 = new JScrollPane(tabelle2);
+        tab2Panel.add(scrollPane2, BorderLayout.CENTER);
+
+        tabbedPaneP.addTab("Meine Betreuungen", tab2Panel);
+        
         cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
         
         // Hinzufügen des Zuweisen-Buttons
-        JButton zuweisenButton = new JButton("Zuweisen");
+        JButton zuweisenButton = new JButton("Student betreuen");
         zuweisenButton.addActionListener(e -> Controller.handleAssignButton(tabelle, tableModel));
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(zuweisenButton);
