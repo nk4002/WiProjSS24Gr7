@@ -282,38 +282,41 @@ public class MainFrame extends JFrame {
 
         JTabbedPane tabbedPaneP = new JTabbedPane();
         Controller.tabSwitchListener(tabbedPaneP);
-        
+
         // Tab 1 mit einer Tabelle
         JPanel tab1Panel = new JPanel(new BorderLayout());
         String[] spaltenNamen = {"Vorname und Name", "MNr", "Firma", "Thema"};
-        
+
         DefaultTableModel tableModel = new DefaultTableModel(spaltenNamen, 0);
         JTable tabelle = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(tabelle);
         tab1Panel.add(scrollPane, BorderLayout.CENTER);
 
         tabbedPaneP.addTab("Studentenliste", tab1Panel);
-        cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
-        
-        // Tab 2 mit Tabelle
+
+        // Tab 2 mit einer Tabelle für betreute Studenten
         JPanel tab2Panel = new JPanel(new BorderLayout());
-        JTable tabelle2 = new JTable(tableModel);
+        DefaultTableModel tableModel2 = new DefaultTableModel(spaltenNamen, 0);
+        JTable tabelle2 = new JTable(tableModel2);
         JScrollPane scrollPane2 = new JScrollPane(tabelle2);
         tab2Panel.add(scrollPane2, BorderLayout.CENTER);
 
         tabbedPaneP.addTab("Meine Betreuungen", tab2Panel);
-        
+
         cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
-        
+
         // Hinzufügen des Zuweisen-Buttons
         JButton zuweisenButton = new JButton("Student betreuen");
         zuweisenButton.addActionListener(e -> Controller.handleAssignButton(tabelle, tableModel));
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(zuweisenButton);
         tab1Panel.add(buttonPanel, BorderLayout.SOUTH);
-        
+
         cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
+
+        // Daten für die Tabellen laden
         Controller.loadInactiveStudentDataIntoTable(tableModel);
+        Controller.loadInactiveStudentDataIntoTable(tableModel2);
 
         /////////////////////////////////////////////////////////
         // Code zu Ppa Panel
@@ -710,5 +713,17 @@ public class MainFrame extends JFrame {
 	        loadInactiveStudentDataIntoTable(tableModel); // Neuladen der Tabelle mit den aktuellen Daten
 	    }
     }
+    
+    private static void loadProfessorStudentDataIntoTable(DefaultTableModel tableModel) {
+        List<Student> students = DatabaseManager.getProfessorStudents(User.getLoggedInuser().getPK());
+        for (Student student : students) {
+            Object[] rowData = {
+                student.getVorname() + " " + student.getNachname(),
+                student.getPK(),
+                student.getFirma(),
+                student.getThema()
+            };
+            tableModel.addRow(rowData);
+        }
+    }
 }
-

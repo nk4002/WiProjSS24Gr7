@@ -389,4 +389,34 @@ public class DatabaseManager {
             e.printStackTrace();
         }
     }
+    
+    public static List<Student> getProfessorStudents(int profId) {
+        List<Student> students = new ArrayList<>();
+        String query = "SELECT MNr, Vorname, Name, Studiengang, Firma, Thema, ProfID, Aktiviert FROM studenten WHERE ProfID = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            pstmt.setInt(1, profId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Student student = new Student(
+                        rs.getInt("MNr"),
+                        rs.getString("Vorname"),
+                        rs.getString("Name"),
+                        rs.getString("Studiengang"),
+                        rs.getString("Firma"),
+                        rs.getString("Thema"),
+                        rs.getInt("ProfID"),
+                        rs.getBoolean("Aktiviert")
+                    );
+                    students.add(student);
+                }
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return students;
+    }
 }
