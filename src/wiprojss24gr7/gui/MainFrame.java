@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -38,13 +37,11 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import wiprojss24gr7.database.DatabaseManager;
 import wiprojss24gr7.service.UserService;
 import wiprojss24gr7.userhandling.Ppa;
-import wiprojss24gr7.userhandling.Professor;
 import wiprojss24gr7.userhandling.Student;
 import wiprojss24gr7.userhandling.User;
 
@@ -118,7 +115,7 @@ public class MainFrame extends JFrame {
         /////////////////////////////////////////////////////////
         
         //Komponenten von cardLogIn Panel werden hinzugefügt
-
+        
         cardLogIn.setLayout(new GridBagLayout());
 
         GridBagConstraints gbcLabel = new GridBagConstraints();
@@ -364,7 +361,7 @@ public class MainFrame extends JFrame {
         });
 
         JPanel buttonPanelPpa = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JProgressBar progressBarStudent = new JProgressBar(0, 100);
+        progressBarStudent = new JProgressBar(0, 100);
         progressBarStudent.setStringPainted(true);
         progressBarStudent.setString("Beispiel");
         progressBarStudent.setPreferredSize(new Dimension(200, 20));
@@ -503,7 +500,7 @@ public class MainFrame extends JFrame {
         public static void handleLogin(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel, JTextField usernameField, JPasswordField passwordField, DefaultListModel<String>... models) {
             String cardName = authenticateUser(usernameField.getText(), new String(passwordField.getPassword()));
             clearFields(usernameField, passwordField);
-            if (cardName.equals("nicht Aktiviert")) {
+            if (cardName != null && cardName.equals("nicht Aktiviert")) {
                 loginLabel.setText("Account noch nicht Aktiviert");
             }
             switchCard(cardLayout, cardsPanel, cardName, models);
@@ -520,7 +517,6 @@ public class MainFrame extends JFrame {
             }
             return null;
         }
-
 
         public static void handleLogout(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel) {
             User.setLoggedInuser(null);
@@ -654,8 +650,7 @@ public class MainFrame extends JFrame {
             DatabaseManager.setProfID(profId, MNr);
 			logger.log(Level.INFO, "Zuweisung erfolgreich.");
         }
-    
-    
+     
 	    private static void handleConfirm(JTextField companyField, JTextArea topicField) {
 	        String company = companyField.getText();
 	        String topic = topicField.getText();

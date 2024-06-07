@@ -118,7 +118,6 @@ public class DatabaseManager {
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
-
         return null;
     }
 
@@ -169,22 +168,13 @@ public class DatabaseManager {
     //Geändert am 29.05 von if else auf switch + check ob Aktiviert oder nicht.
     public static List<String> getUsers(String tableName, boolean noTutor) {
         List<String> users = new ArrayList<>();
-        String sql;
-
-        switch (tableName) {
-            case "studenten":
-                if (noTutor) {
-                	sql = "SELECT MNr, Vorname, Name, Aktiviert FROM studenten WHERE ProfID IS NULL AND Aktiviert = 0";
-                } else {
-                    sql = "SELECT MNr, Vorname, Name, Aktiviert FROM studenten";
-                }
-                break;
-            case "professoren":
-                sql = "SELECT ProfID, Vorname, Name FROM professoren";
-                break;
-            default:
-                throw new IllegalArgumentException("Ungültiger Tabellen Name: " + tableName);
-        }
+        String sql = switch (tableName) {
+            case "studenten" -> noTutor ? 
+                "SELECT MNr, Vorname, Name, Aktiviert FROM studenten WHERE ProfID IS NULL AND Aktiviert = 0" : 
+                "SELECT MNr, Vorname, Name, Aktiviert FROM studenten";
+            case "professoren" -> "SELECT ProfID, Vorname, Name FROM professoren";
+            default -> throw new IllegalArgumentException("Ungültiger Tabellen Name: " + tableName);
+        };
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -194,14 +184,14 @@ public class DatabaseManager {
                 String userName = rs.getString("Vorname") + " " + rs.getString("Name");
 
                 if ("studenten".equals(tableName)) {
+                    int mnr = rs.getInt("MNr");
                     if (noTutor) {
-                        int mnr = rs.getInt("MNr");
                         UserService.addSLNoTutor(mnr);
                     } else {
                         if (!rs.getBoolean("Aktiviert")) {
                             userName += " (Nicht Aktiviert!)";
                         }
-                        UserService.addSL(rs.getInt("MNr"));
+                        UserService.addSL(mnr);
                     }
                 } else if ("professoren".equals(tableName)) {
                     UserService.addPL(rs.getInt("ProfID"));
@@ -368,6 +358,7 @@ public class DatabaseManager {
 
         return students;
     }
+    
     public static void assignStudentToProfessor(int studentMNr, int professorId) {
         String updateQuery = "UPDATE studenten SET Aktiviert = true, ProfID = ? WHERE MNr = ?";
 
