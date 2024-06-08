@@ -1,17 +1,30 @@
 package wiprojss24gr7.database;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.Spliterators;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.StreamSupport;
+
 
 import wiprojss24gr7.service.UserService;
+import wiprojss24gr7.userhandling.Document;
 import wiprojss24gr7.userhandling.Ppa;
 import wiprojss24gr7.userhandling.Professor;
 import wiprojss24gr7.userhandling.Student;
@@ -410,4 +423,25 @@ public class DatabaseManager {
 
         return students;
     }
+    
+    public static Optional<Document> getDocumentById(int dokumentId) {
+        String query = "SELECT * FROM dokumente WHERE dokumentId = ?";
+        try (Connection connection = getConnection(); 
+             PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, dokumentId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                Document document = new Document(dokumentId, rs.getBlob("Dokument"), rs.getInt("MNr"),
+                    rs.getString("DokumentTyp"), rs.getString("DateiTyp"), rs.getTimestamp("Zeitstempel"));
+                
+                logger.info("Dokument gefunden mit ID: " + dokumentId);
+                return Optional.of(document);
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            logger.severe("Fehler beim Abrufen des Dokuments mit ID: " + dokumentId + ". Ausnahme: " + e.getMessage());
+        }
+        logger.warning("Dokument nicht gefunden mit ID: " + dokumentId);
+        return Optional.empty();
+    }
 }
+

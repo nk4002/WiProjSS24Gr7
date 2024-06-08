@@ -40,6 +40,7 @@ import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import wiprojss24gr7.database.DatabaseManager;
+import wiprojss24gr7.service.DocumentService;
 import wiprojss24gr7.service.UserService;
 import wiprojss24gr7.userhandling.Ppa;
 import wiprojss24gr7.userhandling.Student;
@@ -367,16 +368,17 @@ public class MainFrame extends JFrame {
         progressBarStudent.setPreferredSize(new Dimension(200, 20));
 
         JButton button1Ppa = new JButton("Button 1");
-        JButton button2Ppa = new JButton("Button 2");
+        JButton downloadButton = new JButton("Download Doc");
+        downloadButton.addActionListener(e -> DocumentService.downloadDocument(1));
         JButton buttonAktivieren = new JButton("Aktivieren");
 
         button1Ppa.setPreferredSize(new Dimension(120, 25));
-        button2Ppa.setPreferredSize(new Dimension(120, 25));
+        downloadButton.setPreferredSize(new Dimension(120, 25));
         buttonAktivieren.setPreferredSize(new Dimension(120, 25));
 
         buttonPanelPpa.add(progressBarStudent);
         buttonPanelPpa.add(button1Ppa);
-        buttonPanelPpa.add(button2Ppa);
+        buttonPanelPpa.add(downloadButton);
         buttonPanelPpa.add(buttonAktivieren);
 
         buttonAktivieren.addActionListener(e -> {

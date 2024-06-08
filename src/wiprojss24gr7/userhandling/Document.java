@@ -4,14 +4,14 @@ import java.sql.Blob;
 import java.sql.Timestamp;
 
 public class Document {
-	private int dokumentId;
-	private Blob document;
-	private int MNr;
-	private String documentType;
-	private String dateiTyp;
-	private Timestamp zeitStempel;
-	
-	public Document() {
+    private int dokumentId;
+    private Blob document;
+    private int MNr;
+    private String documentType;
+    private String dateiTyp;
+    private Timestamp zeitStempel;
+
+    public Document() {
     }
 
     public Document(int dokumentId, Blob document, int MNr, String documentType, String dateiTyp, Timestamp zeitStempel) {
@@ -23,34 +23,60 @@ public class Document {
         this.zeitStempel = zeitStempel;
     }
 
-	public int getDokumentId() {
-		return dokumentId;
-	}
+    // Getters and setters
+    public int getDokumentId() {
+        return dokumentId;
+    }
 
+    public void setDokumentId(int dokumentId) {
+        this.dokumentId = dokumentId;
+    }
 
-	public Blob getDocument() {
-		return document;
-	}
+    public Blob getDocument() {
+        return document;
+    }
 
-	public int getMNr() {
-		return MNr;
-	}
+    public void setDocument(Blob document) {
+        this.document = document;
+    }
 
-	public String getDocumentType() {
-		return documentType;
-	}
+    public int getMNr() {
+        return MNr;
+    }
 
-	public String getDateiTyp() {
-		return dateiTyp;
-	}
+    public void setMNr(int MNr) {
+        this.MNr = MNr;
+    }
 
-	public Timestamp getZeitStempel() {
-		return zeitStempel;
-	}
+    public String getDocumentType() {
+        return documentType;
+    }
 
-	public void setZeitStempel(Timestamp zeitStempel) {
-		this.zeitStempel = zeitStempel;
+    public void setDocumentType(String documentType) {
+        this.documentType = documentType;
+    }
+
+    public String getDateiTyp() {
+        return dateiTyp;
+    }
+
+    public void setDateiTyp(String dateiTyp) {
+        this.dateiTyp = dateiTyp;
+    }
+
+    public Timestamp getZeitStempel() {
+        return zeitStempel;
+    }
+
+    public void setZeitStempel(Timestamp zeitStempel) {
+        this.zeitStempel = zeitStempel;
+    }
+
+	@Override
+	public String toString() {
+		return "Document [dokumentId=" + dokumentId + ", document=" + document + ", MNr=" + MNr + ", documentType="
+				+ documentType + ", dateiTyp=" + dateiTyp + ", zeitStempel=" + zeitStempel + "]";
 	}
     
-	
 }
+
