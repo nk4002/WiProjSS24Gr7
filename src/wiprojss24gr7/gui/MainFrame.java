@@ -43,6 +43,7 @@ import wiprojss24gr7.database.DatabaseManager;
 import wiprojss24gr7.service.DocumentService;
 import wiprojss24gr7.service.UserService;
 import wiprojss24gr7.userhandling.Ppa;
+import wiprojss24gr7.userhandling.Professor;
 import wiprojss24gr7.userhandling.Student;
 import wiprojss24gr7.userhandling.User;
 
@@ -629,9 +630,12 @@ public class MainFrame extends JFrame {
 
             switch (role) {
                 case "Student" -> studentLabel.setText(User.getLoggedInuser().showGreetings());
-                case "Professor" -> profLabel.setText(User.getLoggedInuser().showGreetings());
+                case "Professor" -> {
+                    Professor professor = (Professor) User.getLoggedInuser();
+                    profLabel.setText(professor.showGreetings() + " (ProfID: " + professor.getPK() + ")");
+                }
                 case "Ppa" -> ppaLabel.setText(User.getLoggedInuser().showGreetings());
-                default -> logger.log(Level.SEVERE, "shit broke");
+                default -> logger.log(Level.SEVERE, "Unbekannte Rolle");
             }
         }
         
