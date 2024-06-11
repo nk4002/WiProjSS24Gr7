@@ -29,6 +29,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JProgressBar;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
@@ -251,18 +252,63 @@ public class MainFrame extends JFrame {
         studentLabel = new JLabel("Student Label");
         topPanelS.add(studentLabel, BorderLayout.WEST);
 
-        JButton abmeldenS = new JButton("Abmelden");
-        abmeldenS.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
-        topPanelS.add(abmeldenS, BorderLayout.EAST);
+		JButton abmeldenS = new JButton("Abmelden");
+		abmeldenS.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
+		topPanelS.add(abmeldenS, BorderLayout.EAST);
 
-        cardStudent.add(topPanelS, BorderLayout.NORTH);
+		cardStudent.add(topPanelS, BorderLayout.NORTH);
 
-        JTabbedPane tabbedPaneS = new JTabbedPane();
-        Controller.tabSwitchListener(tabbedPaneS);
-        tabbedPaneS.addTab("Tab 1", new JPanel());
-        tabbedPaneS.addTab("Tab 2", new JPanel());
-        tabbedPaneS.addTab("Tab 3", new JPanel());
-        cardStudent.add(tabbedPaneS, BorderLayout.CENTER);
+		JPanel centerPanelS = new JPanel(new GridBagLayout());
+		GridBagConstraints gbcCenter1 = new GridBagConstraints();
+		gbcCenter1.insets = new Insets(5, 5, 5, 5);
+		gbcCenter1.fill = GridBagConstraints.HORIZONTAL;
+
+		// Name und Betreuer Tabelle
+		String[][] data = {{"Student 1", "Betreuer 1"}};
+		String[] columnNames = {"Dein Name", "Dein Betreuer"};
+		JTable nameTable = new JTable(data, columnNames);
+		nameTable.setFont(new Font("Arial", Font.PLAIN, 14));
+		nameTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
+		nameTable.setRowHeight(25);
+
+		gbcCenter1.gridx = 0;
+		gbcCenter1.gridy = 0;
+		gbcCenter1.gridwidth = 2;
+		centerPanelS.add(nameTable.getTableHeader(), gbcCenter1);
+
+		gbcCenter1.gridy = 1;
+		centerPanelS.add(nameTable, gbcCenter1);
+
+		// CheckBox Gruppe
+		gbcCenter1.gridwidth = 1;
+		gbcCenter1.gridx = 0;
+		gbcCenter1.gridy = 2;
+		gbcCenter1.anchor = GridBagConstraints.WEST;
+
+		JPanel checkBoxPanel = new JPanel(new GridLayout(4, 1));
+		JRadioButton rb1 = new JRadioButton("Besuchsbericht", true);
+		JRadioButton rb2 = new JRadioButton("Praktikumsbericht");
+		JRadioButton rb3 = new JRadioButton("Tätigkeitsnachweis");
+		JRadioButton rb4 = new JRadioButton("Präsentationstraining");
+
+		checkBoxPanel.add(rb1);
+		checkBoxPanel.add(rb2);
+		checkBoxPanel.add(rb3);
+		checkBoxPanel.add(rb4);
+
+		centerPanelS.add(checkBoxPanel, gbcCenter1);
+
+		// Dokument Hochladen Button
+		gbcCenter1.gridx = 0;
+		gbcCenter1.gridy = 3;
+		gbcCenter1.gridwidth = 2;
+		gbcCenter1.anchor = GridBagConstraints.CENTER;
+
+		JButton uploadButton = new JButton("Dokument hochladen");
+		uploadButton.setPreferredSize(new Dimension(200, 40));
+		centerPanelS.add(uploadButton, gbcCenter1);
+
+		cardStudent.add(centerPanelS, BorderLayout.CENTER);
 
         /////////////////////////////////////////////////////////
         // Code zu Professor Panel
