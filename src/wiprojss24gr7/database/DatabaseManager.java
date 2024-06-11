@@ -180,10 +180,11 @@ public class DatabaseManager {
 
     //Geändert am 29.05 von if else auf switch + check ob Aktiviert oder nicht.
     public static List<String> getUsers(String tableName, boolean noTutor) {
-        List<String> users = new ArrayList<>();
+        System.out.println(noTutor);
+    	List<String> users = new ArrayList<>();
         String sql = switch (tableName) {
             case "studenten" -> noTutor ? 
-                "SELECT MNr, Vorname, Name, Aktiviert FROM studenten WHERE ProfID IS NULL AND Aktiviert = 0" : 
+                "SELECT MNr, Vorname, Name, Aktiviert FROM studenten WHERE ProfID IS NULL AND Aktiviert = 1" : 
                 "SELECT MNr, Vorname, Name, Aktiviert FROM studenten";
             case "professoren" -> "SELECT ProfID, Vorname, Name FROM professoren";
             default -> throw new IllegalArgumentException("Ungültiger Tabellen Name: " + tableName);
@@ -198,8 +199,11 @@ public class DatabaseManager {
 
                 if ("studenten".equals(tableName)) {
                     int mnr = rs.getInt("MNr");
+                    System.out.println("hier sollte 2 mal callen");
                     if (noTutor) {
                         UserService.addSLNoTutor(mnr);
+                        System.out.println(mnr);
+                        System.out.println("hier");
                     } else {
                         if (!rs.getBoolean("Aktiviert")) {
                             userName += " (Nicht Aktiviert!)";
@@ -345,7 +349,7 @@ public class DatabaseManager {
 
     public static List<Student> getAllInactiveStudents() {
         List<Student> students = new ArrayList<>();
-        String query = "SELECT MNr, Vorname, Name, Studiengang, Firma, Thema, ProfID, Aktiviert FROM studenten WHERE Aktiviert = false";
+        String query = "SELECT MNr, Vorname, Name, Studiengang, Firma, Thema, ProfID, Aktiviert FROM studenten WHERE ProfID IS NULL And Aktiviert = 1";
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(query);

@@ -533,6 +533,7 @@ public class MainFrame extends JFrame {
             cardLayout.show(cardsPanel, cardName);
             if (models != null && models.length == 3) {
                 controlPopulateList(models[0], models[1], models[2]);
+                System.out.println("callt karten");
             }
         }
 
@@ -630,10 +631,7 @@ public class MainFrame extends JFrame {
 
             switch (role) {
                 case "Student" -> studentLabel.setText(User.getLoggedInuser().showGreetings());
-                case "Professor" -> {
-                    Professor professor = (Professor) User.getLoggedInuser();
-                    profLabel.setText(professor.showGreetings() + " (ProfID: " + professor.getPK() + ")");
-                }
+                case "Professor" -> profLabel.setText(((Professor) User.getLoggedInuser()).showGreetings() + " (ProfID: " + ((Professor) User.getLoggedInuser()).getPK() + ")");
                 case "Ppa" -> ppaLabel.setText(User.getLoggedInuser().showGreetings());
                 default -> logger.log(Level.SEVERE, "Unbekannte Rolle");
             }
