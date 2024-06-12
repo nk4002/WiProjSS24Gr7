@@ -2,80 +2,126 @@ package wiprojss24gr7.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Blob;
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 import wiprojss24gr7.database.DatabaseManager;
 import wiprojss24gr7.gui.MainFrame;
 import wiprojss24gr7.userhandling.Document;
+import wiprojss24gr7.userhandling.User;
 
 public class DocumentService {
     
     private static final Logger logger = Logger.getLogger(DocumentService.class.getName());
     
-    //Methode lädt ein Dokument mit der angegebenen ID herunter und speichert es im Download-Ordner des Benutzers.
-    //Sollte meines Wissens OS-unabhängig sein, wenn nicht, dann krachts wie Sau.
-    public static void downloadDocument(int dokumentId) {
-        String benutzerVerzeichnis = System.getProperty("user.home");
-        String downloadsOrdnerPfad = benutzerVerzeichnis + File.separator + "Downloads";
-        File downloadsOrdner = new File(downloadsOrdnerPfad);
-        if (!downloadsOrdner.exists()) {
-            if (!downloadsOrdner.mkdirs()) {
-                logger.warning("Konnte Downloads-Ordner nicht erstellen.");
-                return;
-            }
-        }
-        String dateiPfad = downloadsOrdnerPfad + File.separator + "Beispiel.pdf";
-        //Optional<Document> repräsentiert potenziell leeres Dokument aus der DB.
-        Optional<Document> optionalDocument = DatabaseManager.getDocumentById(dokumentId);
-        optionalDocument.ifPresent(dokument -> {
-            try {
-                byte[] byteArray = toByteArray(dokument.getDocument());
-                try (FileOutputStream fos = new FileOutputStream(dateiPfad)) {
-                    fos.write(byteArray);
-                    logger.info("Dokument erfolgreich heruntergeladen und gespeichert: " + dateiPfad);
-                    //Popup-Fenster mit dem Download-Pfad wird angezeigt.
-                    JOptionPane.showMessageDialog(null, "Dokument erfolgreich heruntergeladen und gespeichert unter:\n" + dateiPfad, "Download Erfolgreich", JOptionPane.INFORMATION_MESSAGE);
-                } catch (IOException ex) {
-                    logger.severe("Fehler beim Schreiben des Dokuments in die Datei: " + ex.getMessage());
-                }
-            } catch (SQLException | IOException ex) {
-                logger.severe("Fehler beim Konvertieren des Dokuments: " + ex.getMessage());
-            }
-        });
-        optionalDocument.orElseGet(() -> {
-            logger.warning("Dokument mit ID " + dokumentId + " nicht gefunden.");
-            //Popup-Fenster wird angezeigt, wenn das Dokument nicht gefunden wurde.
-            JOptionPane.showMessageDialog(null, "Dokument mit ID " + dokumentId + " nicht gefunden.", "Dokument nicht gefunden", JOptionPane.WARNING_MESSAGE);
-            return null;
-        });
-    }
-   
-    //Konvertiert einen Blob in einen Byte-Array.
-    public static byte[] toByteArray(Blob blob) throws SQLException, IOException {
-        try (InputStream is = blob.getBinaryStream();
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+	 // Methode lädt ein Dokument mit der angegebenen ID herunter und speichert es im Download-Ordner des Benutzers.
+	 // Sollte meines Wissens OS-unabhängig sein, wenn nicht, dann krachts wie Sau.
+	 public static void downloadDocument(String documentType) {
+	     // Der Pfad zum Download-Ordner des Benutzers wird erstellt.
+	     String downloadsFolderPath = System.getProperty("user.home") + File.separator + "Downloads";
+	     File downloadsFolder = new File(downloadsFolderPath);
+	     // Falls der Ordner nicht existiert, wird er erstellt.
+	     if (!downloadsFolder.exists() && !downloadsFolder.mkdirs()) {
+	         logger.warning("Konnte Downloads-Ordner nicht erstellen.");
+	         return;
+	     }
+	     // Dynamische Namensgebung für heruntergeladene Dokumente.
+	     String filePath = downloadsFolderPath + File.separator + User.getSelectedUser().getNachname() + User.getSelectedUser().getVorname() + documentType + ".pdf";
+	
+	     Optional<Document> optionalDocument = DatabaseManager.getDocumentByTypeAndUser(documentType);
+	     optionalDocument.ifPresent(document -> {
+	         try (FileOutputStream fos = new FileOutputStream(filePath)) {
+	             //Das Dokument wird in die Datei geschrieben.
+	             fos.write(toByteArray(document.getDocument()));
+	             logger.info("Dokument erfolgreich heruntergeladen und gespeichert: " + filePath);
+	             //Erfolg Popup
+	             JOptionPane.showMessageDialog(null, "Dokument erfolgreich heruntergeladen und gespeichert unter:\n" + filePath, "Download Erfolgreich", JOptionPane.INFORMATION_MESSAGE);
+	         } catch (IOException | SQLException ex) {
+	             logger.severe("Fehler beim Schreiben des Dokuments in die Datei: " + ex.getMessage());
+	         }
+	     });
+	     optionalDocument.orElseGet(() -> {
+	         //Misserfolg
+	         logger.warning("Kein Dokument dieser Art bei User Vorhanden Vorhanden");
+	         JOptionPane.showMessageDialog(null, "Kein Dokument dieser Art bei "+ User.getSelectedUser().getVorname() +
+	        		 " " + User.getSelectedUser().getNachname() + " Vorhanden Vorhanden", "Dokument nicht gefunden", JOptionPane.WARNING_MESSAGE);
+	         return null;
+	     });
+	 }
+	 
+	 //Methode zum Hochladen eines Dokuments.
+	 public static void uploadDocument(File file, String documentType) throws ClassNotFoundException, SQLException {
+	     if (file != null) {
+	         try (FileInputStream fis = new FileInputStream(file)) {
+	             //Datei wrid in Byte-Array gelesen.
+	             byte[] fileData = new byte[(int) file.length()];
+	             fis.read(fileData);
 
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-            int totalBytesRead=0;
+	             //Byte-Array wird in Blob konvertiert.
+	             Blob documentBlob = DatabaseManager.createBlob(fileData);
 
-            while ((bytesRead = is.read(buffer)) != -1) {
-                baos.write(buffer, 0, bytesRead);
-                totalBytesRead += bytesRead;
-            }
-            
-            logger.info("Blob erfolgreich in Byte-Array konvertiert. Gelesene Bytes: " + totalBytesRead);
+	             // Neues Document-Objekt erstellen
+	             Document document = new Document(
+	                 0,//Unwichtig da PK automatisch Inkrementiert wird.
+	                 documentBlob,
+	                 User.getLoggedInuser().getPK(),
+	                 documentType,
+	                 getFileExtension(file),
+	                 new Timestamp(System.currentTimeMillis())
+	             );
 
-            return baos.toByteArray();
-        }
-    }
+	             // Document-Objekt in die Datenbank speichern
+	             if (DatabaseManager.saveDocumentToDatabase(document)) {
+	                 // Erfolgsmeldung anzeigen
+	                 JOptionPane.showMessageDialog(null, "Dokument erfolgreich hochgeladen und gespeichert.", "Upload Erfolgreich", JOptionPane.INFORMATION_MESSAGE);
+	                 logger.info("Dokument erfolgreich hochgeladen und gespeichert: " + file.getAbsolutePath());
+	             } else {
+	                 JOptionPane.showMessageDialog(null, "Fehler beim Hochladen des Dokuments.", "Upload Fehler", JOptionPane.ERROR_MESSAGE);
+	                 logger.severe("Fehler beim Hochladen des Dokuments: " + file.getAbsolutePath());
+	             }
+	         } catch (IOException ex) {
+	             logger.severe("Fehler beim Lesen der Datei: " + ex.getMessage());
+	             JOptionPane.showMessageDialog(null, "Fehler beim Lesen der Datei.", "Upload Fehler", JOptionPane.ERROR_MESSAGE);
+	         }
+	     } else {
+	         logger.info("Dateiauswahl abgebrochen.");
+	     }
+	 }
+
+	 //Hilfsmethode zur Ermittlung der Dateierweiterung(.pdf etc).
+	 private static String getFileExtension(File file) {
+	     String fileName = file.getName();
+	     int lastIndexOfDot = fileName.lastIndexOf('.');
+	     if (lastIndexOfDot == -1) {
+	         return "";
+	     }
+	     return fileName.substring(lastIndexOfDot + 1);
+	 }
+
+	
+	 // Konvertiert einen Blob in ein Byte-Array.
+	 public static byte[] toByteArray(Blob blob) throws SQLException, IOException {
+	     try (InputStream is = blob.getBinaryStream(); ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+	         byte[] buffer = new byte[1024];
+	         int bytesRead;
+	         while ((bytesRead = is.read(buffer)) != -1) {
+	             baos.write(buffer, 0, bytesRead);
+	         }
+	         logger.info("Blob erfolgreich in Byte-Array konvertiert. Gelesene Bytes: " + baos.size());
+	         return baos.toByteArray();
+	     }
+	 }
+
 }
 

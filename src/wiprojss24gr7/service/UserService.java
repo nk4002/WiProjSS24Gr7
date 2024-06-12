@@ -15,11 +15,9 @@ public class UserService {
 	
 	public static void populateUserList(DefaultListModel<String> listModel, String listType, boolean noTutor) {
 	    List<String> names = DatabaseManager.getUsers(listType, noTutor);
-	    System.out.println("sollte 3 mal callen");
 	    listModel.clear();
 	    for (String user : names) {
 	        listModel.addElement(user);
-	        System.out.println(names);
 	    }
 	}
 
@@ -33,12 +31,10 @@ public class UserService {
 	
 	public static int getSLNoTutorIndex(int i) {
 		return SLNoTutor.get(i);
-		
 	}
 
 	public static void addSL(int pk) {
 		SL.add(pk);
-		System.out.println("call");
 	}
 
 	public static void delSL() {
@@ -47,7 +43,6 @@ public class UserService {
 	
 	public static void addSLNoTutor(int pk) {
 		SLNoTutor.add(pk);
-		System.out.println("call");
 	}
 	
 	public static void addPL(int pk) {

@@ -1,0 +1,44 @@
+[33m0422f71[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31mother-repo/main[m[33m)[m HEAD@{0}: reset: moving to HEAD
+[33m0422f71[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31mother-repo/main[m[33m)[m HEAD@{1}: rebase (skip) (finish): returning to refs/heads/master
+[33m0422f71[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31mother-repo/main[m[33m)[m HEAD@{2}: pull other-repo main (start): checkout 0422f712f20ab2260e61d237a41da8f3ee4a23b0
+[33m6471204[m HEAD@{3}: commit: Dokumentfunktion fertiggestellt
+[33mc9ecbdb[m HEAD@{4}: rebase (continue) (finish): returning to refs/heads/master
+[33mc9ecbdb[m HEAD@{5}: commit: SQL FIX
+[33m3096dc7[m HEAD@{6}: pull other-repo main (start): checkout 3096dc786407ae913290a3291aa9a57e9881768d
+[33m5e02d90[m HEAD@{7}: commit: SQL fix
+[33me0c61b5[m HEAD@{8}: commit: Dokumenten Verwaltung Dummy/zur Erweiterung eingefügt
+[33m9ab3df8[m HEAD@{9}: rebase (continue) (finish): returning to refs/heads/master
+[33m9ab3df8[m HEAD@{10}: commit: some additions
+[33m2f9765c[m HEAD@{11}: commit: some additions
+[33m90fc543[m HEAD@{12}: pull other-repo main (start): checkout 90fc54342f0761c6d9528de6180c7a34ed9e1184
+[33mf14bc42[m HEAD@{13}: commit: minor fixes
+[33m6518c50[m HEAD@{14}: pull other-repo main: Fast-forward
+[33mca25ae2[m HEAD@{15}: commit: Einige fixes + Kleines Feature Update
+[33mbdc0717[m HEAD@{16}: rebase (continue) (finish): returning to refs/heads/master
+[33mbdc0717[m HEAD@{17}: commit: fixes
+[33me96a10e[m HEAD@{18}: pull other-repo main (start): checkout e96a10e35478c9bf8479faae6bac29331b931d55
+[33m352445e[m HEAD@{19}: commit: minor fixes
+[33mbc513c0[m HEAD@{20}: commit: nicht gesaved Hoppala
+[33mb5ec913[m HEAD@{21}: commit: Datenbank Zugriff Überarbeitet
+[33me0a3d28[m HEAD@{22}: commit: Varargs in Controller um Modularität zu steigern
+[33m9a5528c[m HEAD@{23}: commit: Listenfüllung überarbeitet
+[33m97b1d60[m HEAD@{24}: commit: gui style/small fix
+[33mf1af45c[m HEAD@{25}: commit: Gui überarbeitet/Ppa Grundfunktionen fertig
+[33m1818360[m HEAD@{26}: pull --rebase other-repo main (finish): returning to refs/heads/master
+[33m1818360[m HEAD@{27}: pull --rebase other-repo main (pick): eh
+[33mdceb7a1[m HEAD@{28}: pull --rebase other-repo main (start): checkout dceb7a17a93700ae277a110dc688f5cb8d9bd37d
+[33m117dc45[m HEAD@{29}: commit: eh
+[33m9c033b5[m HEAD@{30}: commit: studenten aktivierung(nicht vollständig)
+[33mdc3c378[m HEAD@{31}: rebase (continue) (finish): returning to refs/heads/master
+[33mdc3c378[m HEAD@{32}: commit: Code Verschönert bzw. minimal abgeändert
+[33me002e6d[m HEAD@{33}: pull --rebase other-repo main (start): checkout e002e6d13fa555be0c16e511e618f1e7d1ebb880
+[33m6f84901[m[33m ([m[1;31mother-repo/master[m[33m)[m HEAD@{34}: commit: nerv nicht
+[33m0a63386[m HEAD@{35}: commit: anzeigen von Nutzerinfos hinzugefügt
+[33mc19b9a3[m HEAD@{36}: commit: added gui on ppa view
+[33m2356a6f[m HEAD@{37}: commit: clear textfields
+[33m6b32e14[m HEAD@{38}: commit: added method call
+[33me320a47[m HEAD@{39}: commit: added logout and basic user interface
+[33m053d487[m HEAD@{40}: rebase (continue) (finish): returning to refs/heads/master
+[33m053d487[m HEAD@{41}: commit: resolved
+[33m75cd2d2[m HEAD@{42}: pull --rebase other-repo main (start): checkout 75cd2d23dee428f7b4f1af66ce2a845383c44016
+[33m7f2ae1a[m HEAD@{43}: commit (initial): c

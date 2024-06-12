@@ -180,7 +180,6 @@ public class DatabaseManager {
 
     //Geändert am 29.05 von if else auf switch + check ob Aktiviert oder nicht.
     public static List<String> getUsers(String tableName, boolean noTutor) {
-        System.out.println(noTutor);
     	List<String> users = new ArrayList<>();
         String sql = switch (tableName) {
             case "studenten" -> noTutor ? 
@@ -199,11 +198,8 @@ public class DatabaseManager {
 
                 if ("studenten".equals(tableName)) {
                     int mnr = rs.getInt("MNr");
-                    System.out.println("hier sollte 2 mal callen");
                     if (noTutor) {
                         UserService.addSLNoTutor(mnr);
-                        System.out.println(mnr);
-                        System.out.println("hier");
                     } else {
                         if (!rs.getBoolean("Aktiviert")) {
                             userName += " (Nicht Aktiviert!)";
@@ -428,24 +424,62 @@ public class DatabaseManager {
         return students;
     }
     
-    public static Optional<Document> getDocumentById(int dokumentId) {
-        String query = "SELECT * FROM dokumente WHERE dokumentId = ?";
-        try (Connection connection = getConnection(); 
-             PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setInt(1, dokumentId);
+    //Methode sucht nach einem Dokument anhand des Typs und der Nutzer-ID des ausgewählten Nutzers.
+    public static Optional<Document> getDocumentByTypeAndUser(String documentType) {
+        int userId = User.getSelectedUser().getPK();
+        String query = "SELECT * FROM dokumente WHERE DokumentTyp = ? AND MNr = ?";
+        try (Connection connection = getConnection(); PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, documentType);
+            stmt.setInt(2, userId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                Document document = new Document(dokumentId, rs.getBlob("Dokument"), rs.getInt("MNr"),
-                    rs.getString("DokumentTyp"), rs.getString("DateiTyp"), rs.getTimestamp("Zeitstempel"));
-                
-                logger.info("Dokument gefunden mit ID: " + dokumentId);
+
+                Document document = new Document(
+                    rs.getInt("dokumentid"),
+                    rs.getBlob("Dokument"),
+                    rs.getInt("MNr"),
+                    rs.getString("DokumentTyp"),
+                    rs.getString("DateiTyp"),
+                    rs.getTimestamp("Zeitstempel")
+                );
+                logger.info("Dokument gefunden mit Typ: " + documentType + " für Benutzer: " + userId);
                 return Optional.of(document);
             }
         } catch (SQLException | ClassNotFoundException e) {
-            logger.severe("Fehler beim Abrufen des Dokuments mit ID: " + dokumentId + ". Ausnahme: " + e.getMessage());
+            logger.severe("Fehler beim Abrufen des Dokuments mit Typ: " + documentType + " für Benutzer: " + userId + ". Ausnahme: " + e.getMessage());
         }
-        logger.warning("Dokument nicht gefunden mit ID: " + dokumentId);
+        logger.warning("Dokument nicht gefunden mit Typ: " + documentType + " für Benutzer: " + userId);
         return Optional.empty();
     }
+
+    //Methode zum Speichern des Document-Objekts in der Datenbank
+    public static boolean saveDocumentToDatabase(Document document) throws ClassNotFoundException {
+        String sql = "INSERT INTO dokumente (Mnr, DokumentTyp, Dokument, DateiTyp, Zeitstempel) VALUES (?, ?, ?, ?, ?)";
+        try (Connection connection = DatabaseManager.getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
+           
+            ps.setInt(1, document.getMNr());
+            ps.setString(2, document.getDocumentType());
+            ps.setBlob(3, document.getDocument());
+            ps.setString(4, document.getDateiTyp());
+            ps.setTimestamp(5, document.getZeitStempel());
+
+            int rowsInserted = ps.executeUpdate();
+            return rowsInserted > 0;
+        } catch (SQLException ex) {
+            logger.severe("Fehler beim Speichern des Dokuments in der Datenbank: " + ex.getMessage());
+            return false;
+        }
+    }
+
+    //Methode zum Erstellen eines Blob aus einem Byte-Array.
+    public static Blob createBlob(byte[] data) throws SQLException, ClassNotFoundException {
+        try (Connection connection = getConnection()) {
+            //Erstellen eines Blob-Objekts und Schreiben der Daten aus einem Byte-Array.
+            Blob blob = connection.createBlob();
+            blob.setBytes(1, data);
+            return blob;
+        }
+    }
+
 }
 

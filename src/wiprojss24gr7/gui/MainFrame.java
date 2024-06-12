@@ -15,6 +15,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.logging.Level;
@@ -22,6 +23,8 @@ import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -247,7 +250,7 @@ public class MainFrame extends JFrame {
         // Code zu Student Panel
         /////////////////////////////////////////////////////////
 
-        JPanel topPanelS = new JPanel(new BorderLayout());
+		JPanel topPanelS = new JPanel(new BorderLayout());
 
         studentLabel = new JLabel("Student Label");
         topPanelS.add(studentLabel, BorderLayout.WEST);
@@ -279,22 +282,16 @@ public class MainFrame extends JFrame {
 		gbcCenter1.gridy = 1;
 		centerPanelS.add(nameTable, gbcCenter1);
 
-		// CheckBox Gruppe
 		gbcCenter1.gridwidth = 1;
 		gbcCenter1.gridx = 0;
 		gbcCenter1.gridy = 2;
 		gbcCenter1.anchor = GridBagConstraints.WEST;
 
 		JPanel checkBoxPanel = new JPanel(new GridLayout(4, 1));
-		JRadioButton rb1 = new JRadioButton("Besuchsbericht", true);
-		JRadioButton rb2 = new JRadioButton("Praktikumsbericht");
-		JRadioButton rb3 = new JRadioButton("Tätigkeitsnachweis");
-		JRadioButton rb4 = new JRadioButton("Präsentationstraining");
 
-		checkBoxPanel.add(rb1);
-		checkBoxPanel.add(rb2);
-		checkBoxPanel.add(rb3);
-		checkBoxPanel.add(rb4);
+		JComboBox<String> optionsComboBoxStud = Controller.createOptionsComboBox();
+		
+		checkBoxPanel.add(optionsComboBoxStud);
 
 		centerPanelS.add(checkBoxPanel, gbcCenter1);
 
@@ -305,6 +302,9 @@ public class MainFrame extends JFrame {
 		gbcCenter1.anchor = GridBagConstraints.CENTER;
 
 		JButton uploadButton = new JButton("Dokument hochladen");
+		uploadButton.addActionListener(e -> Controller.handleUpload(optionsComboBoxStud));
+		
+
 		uploadButton.setPreferredSize(new Dimension(200, 40));
 		centerPanelS.add(uploadButton, gbcCenter1);
 
@@ -414,17 +414,19 @@ public class MainFrame extends JFrame {
         progressBarStudent.setString("Beispiel");
         progressBarStudent.setPreferredSize(new Dimension(200, 20));
 
-        JButton button1Ppa = new JButton("Button 1");
+        JComboBox<String> optionsComboBoxPpa = Controller.createOptionsComboBox();
+        buttonPanelPpa.add(optionsComboBoxPpa);
+        
         JButton downloadButton = new JButton("Download Doc");
-        downloadButton.addActionListener(e -> DocumentService.downloadDocument(1));
+        downloadButton.addActionListener(e -> Controller.handleDownloadButtonClick(optionsComboBoxPpa));
         JButton buttonAktivieren = new JButton("Aktivieren");
 
-        button1Ppa.setPreferredSize(new Dimension(120, 25));
+        optionsComboBoxPpa.setPreferredSize(new Dimension(160, 25));
         downloadButton.setPreferredSize(new Dimension(120, 25));
         buttonAktivieren.setPreferredSize(new Dimension(120, 25));
 
         buttonPanelPpa.add(progressBarStudent);
-        buttonPanelPpa.add(button1Ppa);
+        buttonPanelPpa.add(optionsComboBoxPpa);
         buttonPanelPpa.add(downloadButton);
         buttonPanelPpa.add(buttonAktivieren);
 
@@ -451,7 +453,6 @@ public class MainFrame extends JFrame {
 
         tabbedPanePpa.addTab("Studentenverwaltung", tabPanelPpa);
         Controller.tabSwitchListener(tabbedPanePpa);
-
         //Tab 2: Betreuerverwaltung
         studentListModelTab2Ppa = new DefaultListModel<>();
         JList<String> studentListTab2Ppa = new JList<>(studentListModelTab2Ppa);
@@ -579,7 +580,6 @@ public class MainFrame extends JFrame {
             cardLayout.show(cardsPanel, cardName);
             if (models != null && models.length == 3) {
                 controlPopulateList(models[0], models[1], models[2]);
-                System.out.println("callt karten");
             }
         }
 
@@ -757,18 +757,79 @@ public class MainFrame extends JFrame {
 	        tableModel.setRowCount(0); // Leeren der Tabelle
 	        loadInactiveStudentDataIntoTable(tableModel); // Neuladen der Tabelle mit den aktuellen Daten
 	    }
-    }
     
-    private static void loadProfessorStudentDataIntoTable(DefaultTableModel tableModel) {
-        List<Student> students = DatabaseManager.getProfessorStudents(User.getLoggedInuser().getPK());
-        for (Student student : students) {
-            Object[] rowData = {
-                student.getVorname() + " " + student.getNachname(),
-                student.getPK(),
-                student.getFirma(),
-                student.getThema()
-            };
-            tableModel.addRow(rowData);
-        }
-    }
+	    private static void loadProfessorStudentDataIntoTable(DefaultTableModel tableModel) {
+	        List<Student> students = DatabaseManager.getProfessorStudents(User.getLoggedInuser().getPK());
+	        for (Student student : students) {
+	            Object[] rowData = {
+	                student.getVorname() + " " + student.getNachname(),
+	                student.getPK(),
+	                student.getFirma(),
+	                student.getThema()
+	            };
+	            tableModel.addRow(rowData);
+	        }
+	    }
+	    
+	    private static JComboBox<String> createOptionsComboBox() {
+	        String[] options = {"Besuchs Bericht", "Studierenden Bericht", "Tätigkeitsnachweis", "Vortrag Bericht"};
+	        return new JComboBox<>(options);
+	    }
+	    
+	    private static void handleDownloadButtonClick(JComboBox<String> optionsComboBox) {
+	        try {
+	            String documentType = getSelectedOption(optionsComboBox);
+	            logger.info("Option ausgewählt. Dokumenttyp: " + documentType);
+	            DocumentService.downloadDocument(documentType);
+	        } catch (Exception e) {
+	            logger.severe("Fehler beim Behandeln der ausgewählten Option: " + e.getMessage());
+	        }
+	    }
+
+	    private static String getSelectedOption(JComboBox<String> optionsComboBox) {
+	        int selectedIndex = optionsComboBox.getSelectedIndex();
+	        int optionNumber = selectedIndex + 1;
+	        return getDocType(optionNumber);//Rückgabe des ausgewählten Dokumenttyps.
+	    }
+
+	    // Methode zur Zuordnung einer Dokumentnummer zu einem Dokumenttyp.
+	    public static String getDocType(int documentNr) {
+	        return switch (documentNr) {
+	            case 1 -> "BesucherBericht";
+	            case 2 -> "StudBericht";
+	            case 3 -> "TaetigkeitsNw";
+	            case 4 -> "VortrBericht";
+	            default -> null;
+	        };
+	    }
+
+	    private static void handleUpload(JComboBox<String> optionsComboBox) {
+	        File file = Controller.chooseFile();//Dateiauswahl über Dateiauswahlpopup.
+	        if (file != null) {
+	            String documentType = getSelectedOption(optionsComboBox);
+	            try {
+	                DocumentService.uploadDocument(file, documentType);
+	            } catch (ClassNotFoundException | SQLException ex) {
+	                ex.printStackTrace();
+	            }
+	        }
+	    }
+
+	    // Methode zur Auswahl einer Datei über den Dateiauswahldialog
+	    public static File chooseFile() {
+	        JFileChooser fileChooser = new JFileChooser();
+	        int returnValue = fileChooser.showOpenDialog(null);
+	        if (returnValue == JFileChooser.APPROVE_OPTION) {
+	            return fileChooser.getSelectedFile();//Rückgabe der ausgewählten Datei
+	        } else {
+	            return null;
+	        }
+	    }
+	}
 }
+
+
+
+
+
+

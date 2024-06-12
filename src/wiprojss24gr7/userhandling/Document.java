@@ -4,32 +4,32 @@ import java.sql.Blob;
 import java.sql.Timestamp;
 
 public class Document {
-    private int dokumentId;
+    private int documentId;
     private Blob document;
     private int MNr;
     private String documentType;
-    private String dateiTyp;
-    private Timestamp zeitStempel;
+    private String fileType;
+    private Timestamp timeStamp;
 
     public Document() {
     }
 
-    public Document(int dokumentId, Blob document, int MNr, String documentType, String dateiTyp, Timestamp zeitStempel) {
-        this.dokumentId = dokumentId;
+    public Document(int documentId, Blob document, int MNr, String documentType, String fileType, Timestamp timeStamp) {
+        this.documentId = documentId;
         this.document = document;
         this.MNr = MNr;
         this.documentType = documentType;
-        this.dateiTyp = dateiTyp;
-        this.zeitStempel = zeitStempel;
+        this.fileType = fileType;
+        this.timeStamp = timeStamp;
     }
 
-    // Getters and setters
+    // Getter und Setter.
     public int getDokumentId() {
-        return dokumentId;
+        return documentId;
     }
 
     public void setDokumentId(int dokumentId) {
-        this.dokumentId = dokumentId;
+        this.documentId = dokumentId;
     }
 
     public Blob getDocument() {
@@ -57,26 +57,28 @@ public class Document {
     }
 
     public String getDateiTyp() {
-        return dateiTyp;
+        return fileType;
     }
 
     public void setDateiTyp(String dateiTyp) {
-        this.dateiTyp = dateiTyp;
+        this.fileType = dateiTyp;
     }
 
     public Timestamp getZeitStempel() {
-        return zeitStempel;
+        return timeStamp;
     }
 
-    public void setZeitStempel(Timestamp zeitStempel) {
-        this.zeitStempel = zeitStempel;
+    public void setZeitStempel(Timestamp timeStamp) {
+        this.timeStamp = timeStamp;
     }
 
 	@Override
 	public String toString() {
-		return "Document [dokumentId=" + dokumentId + ", document=" + document + ", MNr=" + MNr + ", documentType="
-				+ documentType + ", dateiTyp=" + dateiTyp + ", zeitStempel=" + zeitStempel + "]";
+		return "Document [documentId=" + documentId + ", document=" + document + ", MNr=" + MNr + ", documentType="
+				+ documentType + ", fileType=" + fileType + ", timeStamp=" + timeStamp + "]";
 	}
+
+	
     
 }
 
