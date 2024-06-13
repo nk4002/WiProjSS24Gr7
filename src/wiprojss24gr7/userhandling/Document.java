@@ -77,8 +77,5 @@ public class Document {
 		return "Document [documentId=" + documentId + ", document=" + document + ", MNr=" + MNr + ", documentType="
 				+ documentType + ", fileType=" + fileType + ", timeStamp=" + timeStamp + "]";
 	}
-
-	
-    
 }
 

@@ -17,6 +17,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.sql.SQLException;
+//import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,7 +33,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JProgressBar;
-import javax.swing.JRadioButton;
+//import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
@@ -42,6 +43,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.FontUIResource;
 import javax.swing.table.DefaultTableModel;
 import wiprojss24gr7.database.DatabaseManager;
 import wiprojss24gr7.service.DocumentService;
@@ -66,14 +68,16 @@ public class MainFrame extends JFrame {
     private JPasswordField passwordField;
     private JButton loginButton;
     private JProgressBar progressBarStudent;
-    DefaultListModel<String> studentListPpaModel;
-    DefaultListModel<String> studentListModelTab2Ppa;
-    DefaultListModel<String> professorListModelTab2;
+    static DefaultListModel<String> studentListPpaModel;
+    static DefaultListModel<String> studentListModelTab2Ppa;
+    static DefaultListModel<String> professorListModelTab2;
     private static JLabel loginLabel, studentLabel, profLabel, ppaLabel;
 
   public static void main(String[] args) {
     	
-    	try {
+	    Controller.setUIFont(new FontUIResource(new Font("Arial", Font.PLAIN, 20)));
+	  
+	  	try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             e.printStackTrace();
@@ -132,7 +136,7 @@ public class MainFrame extends JFrame {
         gbcLabel.insets = new Insets(20, 5, 25, 5); 
         loginLabel = new JLabel("Melden sie sich mit Ihren Benutzerdaten an.", SwingConstants.CENTER); 
         cardLogIn.add(loginLabel, gbcLabel);
-        loginLabel.setPreferredSize(new Dimension(300, loginLabel.getPreferredSize().height));
+        loginLabel.setPreferredSize(new Dimension(350, loginLabel.getPreferredSize().height));
 
         GridBagConstraints gbcUsername = new GridBagConstraints();
         gbcUsername.gridx = 0;
@@ -164,7 +168,7 @@ public class MainFrame extends JFrame {
         cardLogIn.add(loginButton, gbcLoginButton);
 
 
-        loginButton.addActionListener(e -> Controller.handleLogin(e, cardLayout, cardsPanel, usernameField, passwordField, studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa));
+        loginButton.addActionListener(e -> Controller.handleLogin(e, cardLayout, cardsPanel, usernameField, passwordField));
 
         /////////////////////////////////////////////////////////
         //Code zu StudentErstanmeldung Panel
@@ -367,178 +371,171 @@ public class MainFrame extends JFrame {
         // Code zu Ppa Panel
         /////////////////////////////////////////////////////////
 
-        //Geändert am 01.07 Gui Style + fix von Textfeld Größe
-        //Top Panel für Button und Label werden mit BorderLayout recht und links platziert.
-        JPanel topPanelPpa = new JPanel(new BorderLayout());
-        topPanelPpa.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        ppaLabel = new JLabel("Ppa Label");
-        ppaLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        topPanelPpa.add(ppaLabel, BorderLayout.WEST);
-
-        JButton abmeldenPpa = new JButton("Abmelden");
-        abmeldenPpa.setPreferredSize(new Dimension(120, 30));
-        topPanelPpa.add(abmeldenPpa, BorderLayout.EAST);
-
-        cardPpa.add(topPanelPpa, BorderLayout.NORTH);
-
-        JTabbedPane tabbedPanePpa = new JTabbedPane();
-        tabbedPanePpa.setFont(new Font("Arial", Font.PLAIN, 12));
-
-        //Tab 1: Studentenverwaltung
-        studentListPpaModel = new DefaultListModel<>();
-        JList<String> studentListPpa = new JList<>(studentListPpaModel);
-        studentListPpa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        studentListPpa.setFont(new Font("Arial", Font.PLAIN, 12));
-        studentListPpa.setBorder(BorderFactory.createTitledBorder("Studenten"));
-        studentListPpa.setPreferredSize(new Dimension(250, 300));//Ich Setze die größe einfach direkt selber Swing ist ein Mülleimer sonst.
-
-        JTextArea textAreaStudentPpa = new JTextArea();
-        textAreaStudentPpa.setEditable(false);
-        textAreaStudentPpa.setFont(new Font("Arial", Font.PLAIN, 12));
-        textAreaStudentPpa.setBorder(BorderFactory.createTitledBorder("Student Details"));
-        JScrollPane scrollPaneStudentPpa = new JScrollPane(textAreaStudentPpa);
-
-        studentListPpa.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 1) {
-                    Controller.handleMouseClick(studentListPpa, textAreaStudentPpa, "studentList");
-                }
-            }
-        });
-
-        JPanel buttonPanelPpa = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        progressBarStudent = new JProgressBar(0, 100);
-        progressBarStudent.setStringPainted(true);
-        progressBarStudent.setString("Beispiel");
-        progressBarStudent.setPreferredSize(new Dimension(200, 20));
-
-        JComboBox<String> optionsComboBoxPpa = Controller.createOptionsComboBox();
-        buttonPanelPpa.add(optionsComboBoxPpa);
-        
-        JButton downloadButton = new JButton("Download Doc");
-        downloadButton.addActionListener(e -> Controller.handleDownloadButtonClick(optionsComboBoxPpa));
-        JButton buttonAktivieren = new JButton("Aktivieren");
-
-        optionsComboBoxPpa.setPreferredSize(new Dimension(160, 25));
-        downloadButton.setPreferredSize(new Dimension(120, 25));
-        buttonAktivieren.setPreferredSize(new Dimension(120, 25));
-
-        buttonPanelPpa.add(progressBarStudent);
-        buttonPanelPpa.add(optionsComboBoxPpa);
-        buttonPanelPpa.add(downloadButton);
-        buttonPanelPpa.add(buttonAktivieren);
-
-        buttonAktivieren.addActionListener(e -> {
-            Student selectedStudent = (Student) Student.getSelectedUser();
-            if (selectedStudent.isAktiviert()) {
-                return;
-            } else {
-                selectedStudent.setAktiviert(true);
-                try {
-                    DatabaseManager.activateStudent();
-                    Controller.updateLists(studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa);
-                } catch (ClassNotFoundException e1) {
-                    e1.printStackTrace();
-                }
-            }
-        });
-
-        JPanel tabPanelPpa = new JPanel(new BorderLayout(10, 10));
-        tabPanelPpa.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        tabPanelPpa.add(new JScrollPane(studentListPpa), BorderLayout.WEST);
-        tabPanelPpa.add(scrollPaneStudentPpa, BorderLayout.CENTER);
-        tabPanelPpa.add(buttonPanelPpa, BorderLayout.SOUTH);
-
-        tabbedPanePpa.addTab("Studentenverwaltung", tabPanelPpa);
-        Controller.tabSwitchListener(tabbedPanePpa);
-        //Tab 2: Betreuerverwaltung
-        studentListModelTab2Ppa = new DefaultListModel<>();
-        JList<String> studentListTab2Ppa = new JList<>(studentListModelTab2Ppa);
-        studentListTab2Ppa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        studentListTab2Ppa.setFont(new Font("Arial", Font.PLAIN, 12));
-        studentListTab2Ppa.setBorder(BorderFactory.createTitledBorder("Studenten ohne Betreuer"));
-        studentListTab2Ppa.setPreferredSize(new Dimension(150, 300));//Selbiges hier.
-
-        JTextArea studentDetailTextAreaTab2 = new JTextArea();
-        studentDetailTextAreaTab2.setEditable(false);
-        studentDetailTextAreaTab2.setFont(new Font("Arial", Font.PLAIN, 12));
-        studentDetailTextAreaTab2.setBorder(BorderFactory.createTitledBorder("Student Details"));
-        JScrollPane studentDetailScrollPaneTab2Ppa = new JScrollPane(studentDetailTextAreaTab2);
-        studentDetailScrollPaneTab2Ppa.setPreferredSize(new Dimension(300, 150));//Hier besonders wichtig weil sonst das Textfeld nicht die richtige Größe hat.
-
-        studentListTab2Ppa.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 1) {
-                    Controller.handleMouseClick(studentListTab2Ppa, studentDetailTextAreaTab2, "studentListNoTutor");
-                }
-            }
-        });
-
-        professorListModelTab2 = new DefaultListModel<>();
-        JList<String> professorListTab2Ppa = new JList<>(professorListModelTab2);
-        professorListTab2Ppa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        professorListTab2Ppa.setFont(new Font("Arial", Font.PLAIN, 12));
-        professorListTab2Ppa.setBorder(BorderFactory.createTitledBorder("Professoren"));
-        professorListTab2Ppa.setPreferredSize(new Dimension(150, 300));//Selbiges hier.
-
-        JTextArea professorDetailTextAreaTab2 = new JTextArea();
-        professorDetailTextAreaTab2.setEditable(false);
-        professorDetailTextAreaTab2.setFont(new Font("Arial", Font.PLAIN, 12));
-        professorDetailTextAreaTab2.setBorder(BorderFactory.createTitledBorder("Professor Details"));
-        JScrollPane professorDetailScrollPaneTab2Ppa = new JScrollPane(professorDetailTextAreaTab2);
-        professorDetailScrollPaneTab2Ppa.setPreferredSize(new Dimension(300, 150));//Selbiges hier.
-        
-        professorListTab2Ppa.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 1) {
-                    Controller.handleMouseClick(professorListTab2Ppa, professorDetailTextAreaTab2, "professorList");
-                }
-            }
-        });
-
-        JButton zuweiseButton = new JButton("Zuweisen");
-        zuweiseButton.setPreferredSize(new Dimension(120, 25));
-        
-        zuweiseButton.addActionListener(e -> {
-            Controller.setBetreuer();
-            Controller.updateLists(studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa);
-        });
-        
-        JPanel studentPanelTab2Ppa = new JPanel(new BorderLayout(10, 10));
-        studentPanelTab2Ppa.add(new JScrollPane(studentListTab2Ppa), BorderLayout.CENTER);
-        studentPanelTab2Ppa.add(studentDetailScrollPaneTab2Ppa, BorderLayout.SOUTH);
-
-        JPanel professorPanelTab2Ppa = new JPanel(new BorderLayout(10, 10));
-        professorPanelTab2Ppa.add(new JScrollPane(professorListTab2Ppa), BorderLayout.CENTER);
-        professorPanelTab2Ppa.add(professorDetailScrollPaneTab2Ppa, BorderLayout.SOUTH);
-
-        JPanel mainPanelTab2Ppa = new JPanel(new GridLayout(1, 2, 10, 10));
-        mainPanelTab2Ppa.add(studentPanelTab2Ppa);
-        mainPanelTab2Ppa.add(professorPanelTab2Ppa);
-
-        JPanel tabPanel2Ppa = new JPanel(new BorderLayout(10, 10));
-        tabPanel2Ppa.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        tabPanel2Ppa.add(mainPanelTab2Ppa, BorderLayout.CENTER);
-        tabPanel2Ppa.add(zuweiseButton, BorderLayout.SOUTH);
-
-        tabbedPanePpa.addTab("Betreuerverwaltung", tabPanel2Ppa);
-        
-        abmeldenPpa.addActionListener(e -> {
-            Controller.handleLogout(e, cardLayout, cardsPanel);
-            Controller.clearTextAreas(textAreaStudentPpa, professorDetailTextAreaTab2, studentDetailTextAreaTab2);
-        });
-
-        cardPpa.add(tabbedPanePpa, BorderLayout.CENTER);
-
-        
-
-        tabbedPaneP.addTab("Studentenliste", tab1Panel);
-        cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
-
+	    // Geändert am 01.07 Gui Style + fix von Textfeld Größe
+	    // Top Panel für Button und Label werden mit BorderLayout recht und links platziert.
+	    JPanel topPanelPpa = new JPanel(new BorderLayout());
+	    topPanelPpa.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+	
+	    ppaLabel = new JLabel("Ppa Label");
+	    topPanelPpa.add(ppaLabel, BorderLayout.WEST);
+	
+	    JButton abmeldenPpa = new JButton("Abmelden");
+	    abmeldenPpa.setPreferredSize(new Dimension(140, 40)); 
+	    topPanelPpa.add(abmeldenPpa, BorderLayout.EAST);
+	
+	    cardPpa.add(topPanelPpa, BorderLayout.NORTH);
+	
+	    JTabbedPane tabbedPanePpa = new JTabbedPane();
+	    tabbedPanePpa.setFont(new Font("Arial", Font.PLAIN, 18)); 
+	    tabbedPanePpa.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+	
+	    // Tab 1: Studentenverwaltung
+	    studentListPpaModel = new DefaultListModel<>();
+	    JList<String> studentListPpa = new JList<>(studentListPpaModel);
+	    studentListPpa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+	    studentListPpa.setBorder(BorderFactory.createTitledBorder("Studenten"));
+	    studentListPpa.setPreferredSize(new Dimension(300, 400)); 
+	
+	    JTextArea textAreaStudentPpa = new JTextArea();
+	    textAreaStudentPpa.setEditable(false);
+	    textAreaStudentPpa.setBorder(BorderFactory.createTitledBorder("Student Details"));
+	    JScrollPane scrollPaneStudentPpa = new JScrollPane(textAreaStudentPpa);
+	
+	    studentListPpa.addMouseListener(new MouseAdapter() {
+	        @Override
+	        public void mouseClicked(MouseEvent e) {
+	            if (e.getClickCount() == 1) {
+	                Controller.handleMouseClick(studentListPpa, textAreaStudentPpa, "studentList");
+	            }
+	        }
+	    });
+	
+	    JPanel buttonPanelPpa = new JPanel(new FlowLayout(FlowLayout.LEFT));
+	    progressBarStudent = new JProgressBar(0, 100);
+	    progressBarStudent.setStringPainted(true);
+	    progressBarStudent.setString("Beispiel");
+	    progressBarStudent.setPreferredSize(new Dimension(250, 30)); 
+	
+	    JComboBox<String> optionsComboBoxPpa = Controller.createOptionsComboBox();
+	    buttonPanelPpa.add(optionsComboBoxPpa);
+	
+	    JButton downloadButton = new JButton("Download Doc");
+	    downloadButton.addActionListener(e -> Controller.handleDownloadButtonClick(optionsComboBoxPpa));
+	    JButton buttonAktivieren = new JButton("Aktivieren");
+	
+	    optionsComboBoxPpa.setPreferredSize(new Dimension(200, 35)); 
+	    downloadButton.setPreferredSize(new Dimension(160, 35)); 
+	    buttonAktivieren.setPreferredSize(new Dimension(160, 35)); 
+	
+	    buttonPanelPpa.add(progressBarStudent);
+	    buttonPanelPpa.add(optionsComboBoxPpa);
+	    buttonPanelPpa.add(downloadButton);
+	    buttonPanelPpa.add(buttonAktivieren);
+	
+	    buttonAktivieren.addActionListener(e -> {
+	        Student selectedStudent = (Student) Student.getSelectedUser();
+	        if (selectedStudent.isAktiviert()) {
+	            return;
+	        } else {
+	             selectedStudent.setAktiviert(true);
+	            try {
+	                DatabaseManager.activateStudent();
+	                Controller.updateLists(studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa);
+	            } catch (ClassNotFoundException e1) {
+	                e1.printStackTrace();
+	            }
+	        }
+	    });
+	
+	    JPanel tabPanelPpa = new JPanel(new BorderLayout(10, 10));
+	    tabPanelPpa.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+	    tabPanelPpa.add(new JScrollPane(studentListPpa), BorderLayout.WEST);
+	    tabPanelPpa.add(scrollPaneStudentPpa, BorderLayout.CENTER);
+	    tabPanelPpa.add(buttonPanelPpa, BorderLayout.SOUTH);
+	
+	    tabbedPanePpa.addTab("Studentenverwaltung", tabPanelPpa);
+	    Controller.tabSwitchListener(tabbedPanePpa);
+	
+	    // Tab 2: Betreuerverwaltung
+	    studentListModelTab2Ppa = new DefaultListModel<>();
+	    JList<String> studentListTab2Ppa = new JList<>(studentListModelTab2Ppa);
+	    studentListTab2Ppa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+	    studentListTab2Ppa.setBorder(BorderFactory.createTitledBorder("Studenten ohne Betreuer"));
+	    studentListTab2Ppa.setPreferredSize(new Dimension(250, 400)); 
+	
+	    JTextArea studentDetailTextAreaTab2 = new JTextArea();
+	    studentDetailTextAreaTab2.setEditable(false);
+	    studentDetailTextAreaTab2.setBorder(BorderFactory.createTitledBorder("Student Details"));
+	    JScrollPane studentDetailScrollPaneTab2Ppa = new JScrollPane(studentDetailTextAreaTab2);
+	    studentDetailScrollPaneTab2Ppa.setPreferredSize(new Dimension(350, 200)); 
+	
+	    studentListTab2Ppa.addMouseListener(new MouseAdapter() {
+	        @Override
+	        public void mouseClicked(MouseEvent e) {
+	            if (e.getClickCount() == 1) {
+	                Controller.handleMouseClick(studentListTab2Ppa, studentDetailTextAreaTab2, "studentListNoTutor");
+	            }
+	        }
+	    });
+	
+	    professorListModelTab2 = new DefaultListModel<>();
+	    JList<String> professorListTab2Ppa = new JList<>(professorListModelTab2);
+	    professorListTab2Ppa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+	    professorListTab2Ppa.setBorder(BorderFactory.createTitledBorder("Professoren"));
+	    professorListTab2Ppa.setPreferredSize(new Dimension(200, 400)); 
+	     
+	    JTextArea professorDetailTextAreaTab2 = new JTextArea();
+	    professorDetailTextAreaTab2.setEditable(false);
+	    professorDetailTextAreaTab2.setBorder(BorderFactory.createTitledBorder("Professor Details"));
+	    JScrollPane professorDetailScrollPaneTab2Ppa = new JScrollPane(professorDetailTextAreaTab2);
+	    professorDetailScrollPaneTab2Ppa.setPreferredSize(new Dimension(350, 200)); 
+	
+	    professorListTab2Ppa.addMouseListener(new MouseAdapter() {
+	        @Override
+	        public void mouseClicked(MouseEvent e) {
+	            if (e.getClickCount() == 1) {
+	                Controller.handleMouseClick(professorListTab2Ppa, professorDetailTextAreaTab2, "professorList");
+	            }
+	        }
+	    });
+	
+	    JButton zuweiseButton = new JButton("Zuweisen");
+	    zuweiseButton.setPreferredSize(new Dimension(140, 35)); 
+	
+	    zuweiseButton.addActionListener(e -> {
+	        Controller.setBetreuer();
+	        Controller.updateLists(studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa);
+	    });
+	
+	    JPanel studentPanelTab2Ppa = new JPanel(new BorderLayout(10, 10));
+	    studentPanelTab2Ppa.add(new JScrollPane(studentListTab2Ppa), BorderLayout.CENTER);
+	    studentPanelTab2Ppa.add(studentDetailScrollPaneTab2Ppa, BorderLayout.SOUTH);
+	
+	    JPanel professorPanelTab2Ppa = new JPanel(new BorderLayout(10, 10));
+	    professorPanelTab2Ppa.add(new JScrollPane(professorListTab2Ppa), BorderLayout.CENTER);
+	    professorPanelTab2Ppa.add(professorDetailScrollPaneTab2Ppa, BorderLayout.SOUTH);
+	
+	    JPanel mainPanelTab2Ppa = new JPanel(new GridLayout(1, 2, 10, 10));
+	    mainPanelTab2Ppa.add(studentPanelTab2Ppa);
+	    mainPanelTab2Ppa.add(professorPanelTab2Ppa);
+	
+	    JPanel tabPanel2Ppa = new JPanel(new BorderLayout(10, 10));
+	    tabPanel2Ppa.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+	    tabPanel2Ppa.add(mainPanelTab2Ppa, BorderLayout.CENTER);
+	    tabPanel2Ppa.add(zuweiseButton, BorderLayout.SOUTH);
+	
+	    tabbedPanePpa.addTab("Betreuerverwaltung", tabPanel2Ppa);
+	
+	    abmeldenPpa.addActionListener(e -> {
+	        Controller.handleLogout(e, cardLayout, cardsPanel);
+	        Controller.clearTextAreas(textAreaStudentPpa, professorDetailTextAreaTab2, studentDetailTextAreaTab2);
+	    });
+	
+	    cardPpa.add(tabbedPanePpa, BorderLayout.CENTER);
+	
+	    tabbedPaneP.addTab("Studentenliste", tab1Panel);
+	    cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
+     
         contentPane.add(cardsPanel, BorderLayout.CENTER);
     }
 
@@ -546,14 +543,30 @@ public class MainFrame extends JFrame {
 
         private static final Logger logger = Logger.getLogger(MainFrame.class.getName());
 
-        @SafeVarargs
-        public static void handleLogin(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel, JTextField usernameField, JPasswordField passwordField, DefaultListModel<String>... models) {
+        private static void setUIFont(FontUIResource fontRes) {
+            String[] uiDefaults = {
+                "Label.font", "Button.font", "ToggleButton.font", "RadioButton.font", "CheckBox.font", 
+                "ColorChooser.font", "ComboBox.font", "ComboBoxItem.font", "InternalFrame.titleFont", 
+                "List.font", "MenuBar.font", "MenuItem.font", "RadioButtonMenuItem.font", "CheckBoxMenuItem.font", 
+                "Menu.font", "PopupMenu.font", "OptionPane.font", "Panel.font", "ProgressBar.font", 
+                "ScrollPane.font", "Viewport.font", "TabbedPane.font", "Table.font", "TableHeader.font", 
+                "TextField.font", "PasswordField.font", "TextArea.font", "TextPane.font", "EditorPane.font", 
+                "TitledBorder.font", "ToolBar.font", "ToolTip.font", "Tree.font"
+            };
+
+            for (String key : uiDefaults) {
+                UIManager.put(key, fontRes);
+            }
+        }
+        
+        public static void handleLogin(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel, JTextField usernameField, JPasswordField passwordField) {
             String cardName = authenticateUser(usernameField.getText(), new String(passwordField.getPassword()));
             clearFields(usernameField, passwordField);
             if (cardName != null && cardName.equals("nicht Aktiviert")) {
                 loginLabel.setText("Account noch nicht Aktiviert");
+            } else {
+                handlePostLogin(cardName, cardLayout, cardsPanel);
             }
-            switchCard(cardLayout, cardsPanel, cardName, models);
         }
 
         private static String authenticateUser(String username, String password) {
@@ -568,23 +581,23 @@ public class MainFrame extends JFrame {
             return null;
         }
 
-        public static void handleLogout(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel) {
-            User.setLoggedInuser(null);
-            switchCard(cardLayout, cardsPanel, "CardLogIn");
-            DatabaseManager.closeConnection();
-            UserService.delSL();
-        }
-
-        @SafeVarargs
-		private static void switchCard(CardLayout cardLayout, JPanel cardsPanel, String cardName, DefaultListModel<String>... models) {
-            cardLayout.show(cardsPanel, cardName);
-            if (models != null && models.length == 3) {
-                controlPopulateList(models[0], models[1], models[2]);
+        private static void handlePostLogin(String cardName, CardLayout cardLayout, JPanel cardsPanel) {
+            switchCard(cardLayout, cardsPanel, cardName);
+            if (User.getLoggedInuser() instanceof Ppa) {
+                populatePpaLists();
             }
         }
 
+        private static void switchCard(CardLayout cardLayout, JPanel cardsPanel, String cardName) {
+            cardLayout.show(cardsPanel, cardName);
+        }
+
+        private static void populatePpaLists() {
+            controlPopulateList(studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa);
+        }
+
         @SafeVarargs
-		private static void controlPopulateList(DefaultListModel<String>... models) {
+        private static void controlPopulateList(DefaultListModel<String>... models) {
             if (User.getLoggedInuser() instanceof Ppa) {
                 if (models != null && models.length == 3) {
                     populateUserList(models[0], "studenten", false);
@@ -607,6 +620,13 @@ public class MainFrame extends JFrame {
             usernameField.setText("");
             passwordField.setText("");
             logger.log(Level.INFO, "Login Felder geleert.");
+        }
+
+        public static void handleLogout(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel) {
+            User.setLoggedInuser(null);
+            switchCard(cardLayout, cardsPanel, "CardLogIn");
+            DatabaseManager.closeConnection();
+            UserService.delSL();
         }
 
         public static void handleMouseClick(JList<String> list, JTextArea textArea, String listIdentifier) {
@@ -664,8 +684,8 @@ public class MainFrame extends JFrame {
         //Setzt Selektierten Nutzer bei tab switch auf null um Probleme bei zuteilung zu vermeiden.
         public static void tabSwitchListener(JTabbedPane tabbedPane) {
             tabbedPane.addChangeListener(e -> {
-                int selectedIndex = tabbedPane.getSelectedIndex();
-                var selectedTabTitle = tabbedPane.getTitleAt(selectedIndex);
+                //int selectedIndex = tabbedPane.getSelectedIndex();
+                //var selectedTabTitle = tabbedPane.getTitleAt(selectedIndex);
                 User.setSelectedUser(null);
                 logger.log(Level.INFO, "User geleert.");
                 
@@ -803,14 +823,22 @@ public class MainFrame extends JFrame {
 	        };
 	    }
 
+
 	    private static void handleUpload(JComboBox<String> optionsComboBox) {
-	        File file = Controller.chooseFile();//Dateiauswahl über Dateiauswahlpopup.
+	        File file = Controller.chooseFile(); // Dateiauswahl über Dateiauswahlpopup.
 	        if (file != null) {
 	            String documentType = getSelectedOption(optionsComboBox);
-	            try {
-	                DocumentService.uploadDocument(file, documentType);
-	            } catch (ClassNotFoundException | SQLException ex) {
-	                ex.printStackTrace();
+	            String fileName = file.getName();
+	            
+	            //Check für Datei Endung.
+	            if (fileName.toLowerCase().endsWith(".pdf")) {
+	                try {
+	                    DocumentService.uploadDocument(file, documentType);
+	                } catch (ClassNotFoundException | SQLException ex) {
+	                    ex.printStackTrace();
+	                }
+	            } else {
+	                JOptionPane.showMessageDialog(null, "Nur PDF's erlaubt.", "File Upload Error", JOptionPane.ERROR_MESSAGE);
 	            }
 	        }
 	    }
