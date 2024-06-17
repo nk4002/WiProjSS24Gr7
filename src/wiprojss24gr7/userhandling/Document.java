@@ -42,7 +42,7 @@ public class Document {
 
     public int getMNr() {
         return MNr;
-    }
+    }                                                             
 
     public void setMNr(int MNr) {
         this.MNr = MNr;

@@ -19,6 +19,7 @@ import javax.swing.JOptionPane;
 import wiprojss24gr7.database.DatabaseManager;
 import wiprojss24gr7.gui.MainFrame;
 import wiprojss24gr7.userhandling.Document;
+import wiprojss24gr7.userhandling.Student;
 import wiprojss24gr7.userhandling.User;
 
 public class DocumentService {
@@ -71,16 +72,23 @@ public class DocumentService {
 	             //Byte-Array wird in Blob konvertiert.
 	             Blob documentBlob = DatabaseManager.createBlob(fileData);
 
-	             // Neues Document-Objekt erstellen
+	             //Check ob Eingeloggter User Student oder Prof
+	             int userPK;
+	             if (User.getLoggedInuser() instanceof Student) {
+	                 userPK = User.getLoggedInuser().getPK();
+	             } else {
+	                 userPK = User.getSelectedUser().getPK();
+	             }
+	             
 	             Document document = new Document(
-	                 0,//Unwichtig da PK automatisch Inkrementiert wird.
-	                 documentBlob,
-	                 User.getLoggedInuser().getPK(),
-	                 documentType,
-	                 getFileExtension(file),
-	                 new Timestamp(System.currentTimeMillis())
+	            		    0, // Unwichtig da PK automatisch Inkrementiert wird.
+	            		    documentBlob,
+	            		    userPK,
+	            		    documentType,
+	            		    getFileExtension(file),
+	            		    new Timestamp(System.currentTimeMillis())
 	             );
-
+	             
 	             // Document-Objekt in die Datenbank speichern
 	             if (DatabaseManager.saveDocumentToDatabase(document)) {
 	                 // Erfolgsmeldung anzeigen

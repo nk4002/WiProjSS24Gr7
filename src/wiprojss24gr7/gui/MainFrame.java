@@ -43,6 +43,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.table.DefaultTableModel;
 import wiprojss24gr7.database.DatabaseManager;
@@ -57,8 +58,8 @@ public class MainFrame extends JFrame {
 
     private static final long serialVersionUID = 1L;
     private static JPanel contentPane;
-    private CardLayout cardLayout;
-    private JPanel cardsPanel;
+    private static CardLayout cardLayout;
+    private static JPanel cardsPanel;
     private JPanel cardLogIn;
     private JPanel cardStudent;
     private JPanel cardProfessor;
@@ -67,11 +68,13 @@ public class MainFrame extends JFrame {
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JButton loginButton;
-    private JProgressBar progressBarStudent;
+    private static JProgressBar progressBarStudent, progressBarS, progressBarPpa;
     static DefaultListModel<String> studentListPpaModel;
-    static DefaultListModel<String> studentListModelTab2Ppa;
+    static DefaultListModel<String> studentListModelNoTutor;
+    static DefaultListModel<String> studentListModelProfNoTutor;
     static DefaultListModel<String> professorListModelTab2;
-    private static JLabel loginLabel, studentLabel, profLabel, ppaLabel;
+    static DefaultListModel<String> studentListModelProfMyStudents;
+    private static JLabel loginLabel, studentErstLabel, studentBetreuerLabel, studentLabel, profLabel, ppaLabel;
 
   public static void main(String[] args) {
     	
@@ -96,7 +99,7 @@ public class MainFrame extends JFrame {
     }
 
     public MainFrame() {
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    	setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setBounds(100, 100, 1000, 800);
         setMinimumSize(new Dimension(500, 400));
         setTitle("Campus Code BPS Verwaltung");
@@ -120,11 +123,11 @@ public class MainFrame extends JFrame {
         cardsPanel.add(cardPpa, "CardPpa");
         cardsPanel.add(cardStudentErstanmeldung, "CardStudentErstanmeldung");
         
+        TitledBorder titledBorderFortschritt = BorderFactory.createTitledBorder("Fortschritt");
+        
         /////////////////////////////////////////////////////////
         //Code zu Login Panel
         /////////////////////////////////////////////////////////
-        
-        //Komponenten von cardLogIn Panel werden hinzugefügt
         
         cardLogIn.setLayout(new GridBagLayout());
 
@@ -133,10 +136,10 @@ public class MainFrame extends JFrame {
         gbcLabel.gridy = 0;
         gbcLabel.fill = GridBagConstraints.HORIZONTAL;
         gbcLabel.anchor = GridBagConstraints.NORTH;
-        gbcLabel.insets = new Insets(20, 5, 25, 5); 
-        loginLabel = new JLabel("Melden sie sich mit Ihren Benutzerdaten an.", SwingConstants.CENTER); 
+        gbcLabel.insets = new Insets(20, 5, 25, 5);
+        loginLabel = new JLabel("Melden Sie sich mit Ihren Benutzerdaten an.", SwingConstants.CENTER);
         cardLogIn.add(loginLabel, gbcLabel);
-        loginLabel.setPreferredSize(new Dimension(350, loginLabel.getPreferredSize().height));
+        loginLabel.setPreferredSize(new Dimension(390, loginLabel.getPreferredSize().height));
 
         GridBagConstraints gbcUsername = new GridBagConstraints();
         gbcUsername.gridx = 0;
@@ -167,152 +170,192 @@ public class MainFrame extends JFrame {
         loginButton = new JButton("Login");
         cardLogIn.add(loginButton, gbcLoginButton);
 
-
         loginButton.addActionListener(e -> Controller.handleLogin(e, cardLayout, cardsPanel, usernameField, passwordField));
 
-        /////////////////////////////////////////////////////////
-        //Code zu StudentErstanmeldung Panel
-        /////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////
+		//Code zu StudentErstanmeldung Panel
+		/////////////////////////////////////////////////////////
+		
+     //Top Panel für Button und Label werden mit GridBagLayout recht und links platziert
+        JPanel topPanelSE = new JPanel(new GridBagLayout());
+        GridBagConstraints gbcTop = new GridBagConstraints();
+        gbcTop.insets = new Insets(5, 5, 5, 5);
 
-        //Top Panel für Button und Label werden mit GridBagLayout recht und links platziert
-		JPanel topPanelSE = new JPanel(new GridBagLayout());
-		GridBagConstraints gbcTop = new GridBagConstraints();
-		gbcTop.insets = new Insets(5, 5, 5, 5);
+        // Student Erstanmeldung Label
+        studentErstLabel = new JLabel("Student Erstanmeldung");
+        gbcTop.gridx = 0; 
+        gbcTop.gridy = 0;
+        gbcTop.anchor = GridBagConstraints.WEST; 
+        topPanelSE.add(studentErstLabel, gbcTop);
 
-		//Student Label
-		gbcTop.gridx = 0;
-		gbcTop.gridy = 0;
-		gbcTop.anchor = GridBagConstraints.WEST;
-		JLabel studentELabel = new JLabel("Student Label");
-		topPanelSE.add(studentELabel, gbcTop);
+        JPanel spacer = new JPanel();
+        gbcTop.gridx = 1; 
+        gbcTop.weightx = 1.0; 
+        gbcTop.fill = GridBagConstraints.HORIZONTAL; 
+        topPanelSE.add(spacer, gbcTop);
 
-		//Abmelden Button
-		gbcTop.gridx = 1;
-		gbcTop.gridy = 0;
-		gbcTop.weightx = 1.0; // Rückt den Button nach rechts ein
-		gbcTop.anchor = GridBagConstraints.EAST;
-		JButton abmeldenSE = new JButton("Abmelden");
-		abmeldenSE.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
-		topPanelSE.add(abmeldenSE, gbcTop);
+        // Info Button
+        gbcTop.gridx = 2;
+        gbcTop.weightx = 0.0;
+        gbcTop.anchor = GridBagConstraints.EAST;
+        JButton infoButtonErst = new JButton("Info");
+        infoButtonErst.addActionListener(e -> {
+            String message = "Willkommen zur Erstanmeldung für Studenten.\n\n"
+                           + "Folgende Schritte sind erforderlich:\n"
+                           + "- Geben Sie Ihre persönlichen Informationen ein.\n"
+                           + "- Wählen Sie Ihre Studiengänge und Kurse aus.\n"
+                           + "- Bestätigen Sie Ihre Angaben und schließen Sie die Anmeldung ab.";
+            
+            JOptionPane.showMessageDialog(contentPane,
+                    message,
+                    "Erstanmeldung Student",
+                    JOptionPane.INFORMATION_MESSAGE);
+        });
+        topPanelSE.add(infoButtonErst, gbcTop);
 
-		cardStudentErstanmeldung.add(topPanelSE, BorderLayout.NORTH);
+        // Abmelden Button
+        gbcTop.gridx = 3;
+        gbcTop.anchor = GridBagConstraints.EAST; 
+        JButton abmeldenSE = new JButton("Abmelden");
+        abmeldenSE.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
+        topPanelSE.add(abmeldenSE, gbcTop);
 
-		//Center Panel für Unternehmen und Themenfeld
-		JPanel centerPanel = new JPanel(new GridBagLayout());
-		GridBagConstraints gbcCenter = new GridBagConstraints();
-		gbcCenter.insets = new Insets(5, 5, 5, 5);
-		gbcCenter.fill = GridBagConstraints.HORIZONTAL;
+        cardStudentErstanmeldung.add(topPanelSE, BorderLayout.NORTH);
 
-		//Unternehmen Feld
-		gbcCenter.gridx = 0;
-		gbcCenter.gridy = 0;
-		gbcCenter.anchor = GridBagConstraints.WEST;
-		JLabel companyLabel = new JLabel("Unternehmen:");
-		centerPanel.add(companyLabel, gbcCenter);
+        //Center Panel für Unternehmen und Themenfeld
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbcCenter = new GridBagConstraints();
+        gbcCenter.insets = new Insets(5, 5, 5, 5);
+        gbcCenter.fill = GridBagConstraints.HORIZONTAL;
 
-		gbcCenter.gridx = 1;
-		gbcCenter.gridy = 0;
-		gbcCenter.gridwidth = 2;
-		JTextField companyField = new JTextField(20);
-		centerPanel.add(companyField, gbcCenter);
+        //Unternehmen Panel
+        JPanel companyPanel = new JPanel(new GridBagLayout());
+        companyPanel.setBorder(BorderFactory.createTitledBorder("Unternehmen"));
+        gbcCenter.gridx = 0;
+        gbcCenter.gridy = 0;
+        gbcCenter.gridwidth = 3;
+        centerPanel.add(companyPanel, gbcCenter);
 
-		//Thema Feld
-		gbcCenter.gridx = 0;
-		gbcCenter.gridy = 1;
-		gbcCenter.gridwidth = 1;
-		gbcCenter.anchor = GridBagConstraints.NORTHWEST;
-		JLabel topicLabel = new JLabel("Thema:");
-		centerPanel.add(topicLabel, gbcCenter);
+        GridBagConstraints gbcCompany = new GridBagConstraints();
+        gbcCompany.insets = new Insets(5, 5, 5, 5);
+        gbcCompany.gridx = 0;
+        gbcCompany.gridy = 0;
+        gbcCompany.gridwidth = 2;
+        JTextField companyField = new JTextField(25);
+        companyPanel.add(companyField, gbcCompany);
 
-		gbcCenter.gridx = 1;
-		gbcCenter.gridy = 1;
-		gbcCenter.gridwidth = 2;
-		gbcCenter.fill = GridBagConstraints.BOTH;
-		JTextArea topicField = new JTextArea(5, 20);
-		topicField.setLineWrap(true);
-		topicField.setWrapStyleWord(true);
-		JScrollPane topicScrollPane = new JScrollPane(topicField);
-		centerPanel.add(topicScrollPane, gbcCenter);
+        //Thema Panel
+        JPanel topicPanel = new JPanel(new GridBagLayout());
+        topicPanel.setBorder(BorderFactory.createTitledBorder("Thema"));
+        gbcCenter.gridx = 0;
+        gbcCenter.gridy = 1;
+        gbcCenter.gridwidth = 3;
+        centerPanel.add(topicPanel, gbcCenter);
 
-		// bestätigen Button
-		gbcCenter.gridx = 0;
-		gbcCenter.gridy = 2;
-		gbcCenter.gridwidth = 3;
-		gbcCenter.anchor = GridBagConstraints.CENTER;
-		JButton confirmButton = new JButton("Stammdaten bestätigen");
-		confirmButton.addActionListener(new ActionListener() {
-		    @Override
-		    public void actionPerformed(ActionEvent e) {
-		        Controller.handleConfirm(companyField, topicField);
-		    }
-		});
-		centerPanel.add(confirmButton, gbcCenter);
+        GridBagConstraints gbcTopic = new GridBagConstraints();
+        gbcTopic.insets = new Insets(5, 5, 5, 5);
+        gbcTopic.gridx = 0;
+        gbcTopic.gridy = 0;
+        gbcTopic.gridwidth = 2;
+        gbcTopic.fill = GridBagConstraints.BOTH;
+        JTextArea topicField = new JTextArea(5, 25);
+        topicField.setLineWrap(true);
+        topicField.setWrapStyleWord(true);
+        JScrollPane topicScrollPane = new JScrollPane(topicField);
+        topicPanel.add(topicScrollPane, gbcTopic);
 
-		cardStudentErstanmeldung.add(centerPanel, BorderLayout.CENTER);
+        //Bestätigen Button
+        gbcCenter.gridx = 0;
+        gbcCenter.gridy = 2;
+        gbcCenter.gridwidth = 3;
+        gbcCenter.anchor = GridBagConstraints.CENTER;
+        JButton confirmButton = new JButton("Stammdaten bestätigen");
+        confirmButton.addActionListener(e -> Controller.handleConfirm(companyField, topicField));
+        centerPanel.add(confirmButton, gbcCenter);
+
+        cardStudentErstanmeldung.add(centerPanel, BorderLayout.CENTER);
+
 
         /////////////////////////////////////////////////////////
         // Code zu Student Panel
         /////////////////////////////////////////////////////////
 
-		JPanel topPanelS = new JPanel(new BorderLayout());
+        JPanel topPanelS = new JPanel(new BorderLayout());
 
         studentLabel = new JLabel("Student Label");
         topPanelS.add(studentLabel, BorderLayout.WEST);
 
-		JButton abmeldenS = new JButton("Abmelden");
-		abmeldenS.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
-		topPanelS.add(abmeldenS, BorderLayout.EAST);
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
-		cardStudent.add(topPanelS, BorderLayout.NORTH);
+        JButton infoButton = new JButton("Info");
+        infoButton.addActionListener(e -> {
+            // Create and show the info popup dialog
+            String message = "Wählen Sie das hochzuladende Dokument mithilfe des\n"
+                           + "Dropdown-Menüs aus. Bei Anklicken des Buttons öffnet sich ein\n"
+                           + "Explorer. Wählen Sie die hochzuladende Datei aus.";
+            
+            JOptionPane.showMessageDialog(contentPane,
+                    message,
+                    "Hilfe",
+                    JOptionPane.INFORMATION_MESSAGE);
+        });
+        buttonPanel.add(infoButton);
 
-		JPanel centerPanelS = new JPanel(new GridBagLayout());
-		GridBagConstraints gbcCenter1 = new GridBagConstraints();
-		gbcCenter1.insets = new Insets(5, 5, 5, 5);
-		gbcCenter1.fill = GridBagConstraints.HORIZONTAL;
+        JButton abmeldenS = new JButton("Abmelden");
+        abmeldenS.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
+        buttonPanel.add(abmeldenS);
 
-		// Name und Betreuer Tabelle
-		String[][] data = {{"Student 1", "Betreuer 1"}};
-		String[] columnNames = {"Dein Name", "Dein Betreuer"};
-		JTable nameTable = new JTable(data, columnNames);
-		nameTable.setFont(new Font("Arial", Font.PLAIN, 14));
-		nameTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
-		nameTable.setRowHeight(25);
+        topPanelS.add(buttonPanel, BorderLayout.EAST);
 
-		gbcCenter1.gridx = 0;
-		gbcCenter1.gridy = 0;
-		gbcCenter1.gridwidth = 2;
-		centerPanelS.add(nameTable.getTableHeader(), gbcCenter1);
+        cardProfessor.add(topPanelS, BorderLayout.NORTH);
 
-		gbcCenter1.gridy = 1;
-		centerPanelS.add(nameTable, gbcCenter1);
+        cardStudent.add(topPanelS, BorderLayout.NORTH);
 
-		gbcCenter1.gridwidth = 1;
-		gbcCenter1.gridx = 0;
-		gbcCenter1.gridy = 2;
-		gbcCenter1.anchor = GridBagConstraints.WEST;
+        JPanel centerPanelS = new JPanel(new BorderLayout());
 
-		JPanel checkBoxPanel = new JPanel(new GridLayout(4, 1));
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        studentBetreuerLabel = new JLabel("Dein Name und Betreuer");
+        titlePanel.add(studentBetreuerLabel);
 
-		JComboBox<String> optionsComboBoxStud = Controller.createOptionsComboBox();
-		
-		checkBoxPanel.add(optionsComboBoxStud);
+        centerPanelS.add(titlePanel, BorderLayout.NORTH);
 
-		centerPanelS.add(checkBoxPanel, gbcCenter1);
+        JPanel contentPanel = new JPanel(new GridBagLayout());
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-		// Dokument Hochladen Button
-		gbcCenter1.gridx = 0;
-		gbcCenter1.gridy = 3;
-		gbcCenter1.gridwidth = 2;
-		gbcCenter1.anchor = GridBagConstraints.CENTER;
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.CENTER;
 
-		JButton uploadButton = new JButton("Dokument hochladen");
-		uploadButton.addActionListener(e -> Controller.handleUpload(optionsComboBoxStud));
-		
+        JLabel label = new JLabel("Dokument Hochladen");
+        contentPanel.add(label, gbc);
 
-		uploadButton.setPreferredSize(new Dimension(200, 40));
-		centerPanelS.add(uploadButton, gbcCenter1);
+        gbc.gridy++;
 
-		cardStudent.add(centerPanelS, BorderLayout.CENTER);
+        JComboBox<String> optionsComboBoxStud = Controller.createOptionsComboBox();
+        Dimension comboBoxDimension = new Dimension(300, optionsComboBoxStud.getPreferredSize().height);
+        optionsComboBoxStud.setPreferredSize(comboBoxDimension);
+        contentPanel.add(optionsComboBoxStud, gbc);
+
+        gbc.gridy++;
+
+        JButton uploadButton = new JButton("Dokument hochladen: ");
+        uploadButton.setPreferredSize(comboBoxDimension);
+        uploadButton.addActionListener(e -> Controller.handleUpload(optionsComboBoxStud));
+        contentPanel.add(uploadButton, gbc);
+
+        gbc.gridy++;
+
+        progressBarS = new JProgressBar();
+        progressBarS.setStringPainted(true);
+        progressBarS.setPreferredSize(new Dimension(350, 40));
+        progressBarS.setBorder(titledBorderFortschritt);
+        contentPanel.add(progressBarS, gbc);
+
+        centerPanelS.add(contentPanel, BorderLayout.CENTER);
+
+        cardStudent.add(centerPanelS, BorderLayout.CENTER);
 
         /////////////////////////////////////////////////////////
         // Code zu Professor Panel
@@ -323,65 +366,164 @@ public class MainFrame extends JFrame {
         profLabel = new JLabel("Professor Label");
         topPanelP.add(profLabel, BorderLayout.WEST);
 
+        // Create a panel for the buttons on the right
+        JPanel buttonPanelP = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
+        // Info Button
+        JButton infoButtonProfessor = new JButton("Info");
+        infoButtonProfessor.addActionListener(e -> {
+            String message = "Willkommen zur Professor-Verwaltung.\n\n"
+                           + "Hier können Sie folgende Aufgaben ausführen:\n"
+                           + "- Verwalten Sie die Ihnen zugewiesenen Studenten.\n"
+                           + "- Überprüfen Sie den Fortschritt und die Aktivitäten Ihrer Studenten.\n"
+                           + "- Laden Sie erforderliche Dokumente über das Dropdown-Menü herunter.";
+            
+            JOptionPane.showMessageDialog(topPanelP,
+                    message,
+                    "Professor-Verwaltung",
+                    JOptionPane.INFORMATION_MESSAGE);
+        });
+        buttonPanelP.add(infoButtonProfessor);
+
+        // Abmelden Button
         JButton abmeldenP = new JButton("Abmelden");
         abmeldenP.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
-        topPanelP.add(abmeldenP, BorderLayout.EAST);
+        buttonPanelP.add(abmeldenP);
+
+        topPanelP.add(buttonPanelP, BorderLayout.EAST);
 
         cardProfessor.add(topPanelP, BorderLayout.NORTH);
 
         JTabbedPane tabbedPaneP = new JTabbedPane();
+        tabbedPaneP.setFont(new Font("Arial", Font.PLAIN, 18)); 
+        tabbedPaneP.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
         Controller.tabSwitchListener(tabbedPaneP);
 
-        // Tab 1 mit einer Tabelle
-        JPanel tab1Panel = new JPanel(new BorderLayout());
-        String[] spaltenNamen = {"Vorname und Name", "MNr", "Firma", "Thema"};
+        //Tab 1 
+        JPanel tab1PanelProf = new JPanel(new BorderLayout());
 
-        DefaultTableModel tableModel = new DefaultTableModel(spaltenNamen, 0);
-        JTable tabelle = new JTable(tableModel);
-        JScrollPane scrollPane = new JScrollPane(tabelle);
-        tab1Panel.add(scrollPane, BorderLayout.CENTER);
+        studentListModelProfNoTutor = new DefaultListModel<>();
+        JList<String> studentListProfNoTutor = new JList<>(studentListModelProfNoTutor);
+        studentListProfNoTutor.setBorder(BorderFactory.createTitledBorder("Studentenliste"));
+        studentListProfNoTutor.setPreferredSize(new Dimension(250, 400)); 
+        JScrollPane listScrollPaneProf = new JScrollPane(studentListProfNoTutor);
+        tab1PanelProf.add(listScrollPaneProf, BorderLayout.WEST);
+        
 
-        tabbedPaneP.addTab("Studentenliste", tab1Panel);
 
-        // Tab 2 mit einer Tabelle für betreute Studenten
-        JPanel tab2Panel = new JPanel(new BorderLayout());
-        DefaultTableModel tableModel2 = new DefaultTableModel(spaltenNamen, 0);
-        JTable tabelle2 = new JTable(tableModel2);
-        JScrollPane scrollPane2 = new JScrollPane(tabelle2);
-        tab2Panel.add(scrollPane2, BorderLayout.CENTER);
+        JTextArea textAreaProfNoTutor = new JTextArea();
+        textAreaProfNoTutor.setBorder(BorderFactory.createTitledBorder("Details"));
+        JScrollPane textScrollPane1 = new JScrollPane(textAreaProfNoTutor);
+        tab1PanelProf.add(textScrollPane1, BorderLayout.CENTER);
+        
+        studentListProfNoTutor.addMouseListener(new MouseAdapter() {
+	        @Override
+	        public void mouseClicked(MouseEvent e) {
+	            if (e.getClickCount() == 1) {
+	                Controller.handleMouseClick(studentListProfNoTutor, textAreaProfNoTutor, "studentListNoTutor");
+	            }
+	        }
+	    });
 
-        tabbedPaneP.addTab("Meine Betreuungen", tab2Panel);
+        JPanel bottomPanel1 = new JPanel(new BorderLayout());
 
+        JButton übernehmenButton = new JButton("Student Übernehmen");
+        
+        übernehmenButton.addActionListener(e -> {
+            Controller.setBetreuer();
+            Controller.updateLists(studentListModelProfNoTutor, studentListModelProfMyStudents);
+        });
+        
+        bottomPanel1.add(übernehmenButton, BorderLayout.CENTER);
+        
+        tab1PanelProf.add(bottomPanel1, BorderLayout.SOUTH);
+        tabbedPaneP.addTab("Studentenliste", tab1PanelProf);
+
+        //Tab 2
+        JPanel tab2PanelProf = new JPanel(new BorderLayout());
+
+	     studentListModelProfMyStudents = new DefaultListModel<>();
+	     JList<String> myStudentsListProf = new JList<>(studentListModelProfMyStudents);
+	     myStudentsListProf.setBorder(BorderFactory.createTitledBorder("Meine Betreuungen"));
+	     myStudentsListProf.setPreferredSize(new Dimension(250, 400));
+	     JScrollPane listScrollPane2 = new JScrollPane(myStudentsListProf);
+	     tab2PanelProf.add(listScrollPane2, BorderLayout.WEST);
+	
+	     JTextArea textAreaProfMyStudents = new JTextArea();
+	     textAreaProfMyStudents.setBorder(BorderFactory.createTitledBorder("Details"));
+	     JScrollPane textScrollPane2 = new JScrollPane(textAreaProfMyStudents);
+	     tab2PanelProf.add(textScrollPane2, BorderLayout.CENTER);
+	
+	     JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+	
+	     progressBarPpa = new JProgressBar();
+	     progressBarPpa.setPreferredSize(new Dimension(350, 40));
+	     progressBarPpa.setStringPainted(true);
+	     progressBarPpa.setBorder(titledBorderFortschritt);
+	     bottomPanel.add(progressBarPpa);
+	     
+	     JComboBox<String> comboBoxProf = Controller.createOptionsComboBox();
+	     bottomPanel.add(comboBoxProf);
+	     
+	     myStudentsListProf.addMouseListener(new MouseAdapter() {
+	         @Override
+	         public void mouseClicked(MouseEvent e) {
+	             if (e.getClickCount() == 1) {
+	                 Controller.handleMouseClick(myStudentsListProf, textAreaProfMyStudents, "professorListMyStudents");
+	             }
+	         }
+	     });
+	
+	     JComboBox<String> comboBoxUtil = Controller.createOptionsComboBox();
+	     
+	     // Buttons
+	     JButton downloadButtonProf = new JButton("Download Dokument");
+	     downloadButtonProf.addActionListener(e -> Controller.handleDownloadButtonClick(comboBoxUtil));
+	     JButton uploadButtonP = new JButton("Upload Besucherbericht");
+	     uploadButtonP.addActionListener(e -> Controller.handleUpload(optionsComboBoxStud));
+	     bottomPanel.add(downloadButtonProf);
+	     bottomPanel.add(uploadButtonP);
+	
+	     tab2PanelProf.add(bottomPanel, BorderLayout.SOUTH);
+	
+	     tabbedPaneP.addTab("Meine Betreuungen", tab2PanelProf);
+	
         cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
 
-        // Hinzufügen des Zuweisen-Buttons
-        JButton zuweisenButton = new JButton("Student betreuen");
-        zuweisenButton.addActionListener(e -> Controller.handleAssignButton(tabelle, tableModel));
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.add(zuweisenButton);
-        tab1Panel.add(buttonPanel, BorderLayout.SOUTH);
+	    //////////////////////////////////////////////////////////////////////////////////
+        //Code zu PPA
+        //////////////////////////////////////////////////////////////////////////////////
+        
+        JPanel topPanelPpa = new JPanel(new BorderLayout());
+        topPanelPpa.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
+        ppaLabel = new JLabel("Ppa Label");
+        topPanelPpa.add(ppaLabel, BorderLayout.WEST);
 
-        // Daten für die Tabellen laden
-        Controller.loadInactiveStudentDataIntoTable(tableModel);
-        Controller.loadInactiveStudentDataIntoTable(tableModel2);
+        JPanel buttonPanelPpaTop = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
-        /////////////////////////////////////////////////////////
-        // Code zu Ppa Panel
-        /////////////////////////////////////////////////////////
+        JButton infoButtonPpa = new JButton("Info");
+        infoButtonPpa.addActionListener(e -> {
+            String message = "Von hier aus können Sie folgende Aktionen durchführen:\n\n"
+                           + "- Überprüfen Sie den Fortschritt und die Aktivierung von Studenten.\n"
+                           + "- Weisen Sie Studenten bestimmten Professoren zu.\n"
+                           + "- Verwenden Sie das Dropdown-Menü, um verschiedene Dokumententypen auszuwählen.\n"
+                           + "- Klicken Sie auf den 'Download' Button, um das ausgewählte Dokument herunterzuladen.";
+            
+            JOptionPane.showMessageDialog(topPanelPpa,
+                    message,
+                    "Info",
+                    JOptionPane.INFORMATION_MESSAGE);
+        });
 
-	    // Geändert am 01.07 Gui Style + fix von Textfeld Größe
-	    // Top Panel für Button und Label werden mit BorderLayout recht und links platziert.
-	    JPanel topPanelPpa = new JPanel(new BorderLayout());
-	    topPanelPpa.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-	
-	    ppaLabel = new JLabel("Ppa Label");
-	    topPanelPpa.add(ppaLabel, BorderLayout.WEST);
-	
-	    JButton abmeldenPpa = new JButton("Abmelden");
-	    abmeldenPpa.setPreferredSize(new Dimension(140, 40)); 
-	    topPanelPpa.add(abmeldenPpa, BorderLayout.EAST);
+        buttonPanelPpaTop.add(infoButtonPpa);
+
+        JButton abmeldenPpa = new JButton("Abmelden");
+        abmeldenPpa.setPreferredSize(new Dimension(140, 40)); // Set preferred size
+        abmeldenPpa.addActionListener(e -> Controller.handleLogout(e, cardLayout, cardsPanel));
+        buttonPanelPpaTop.add(abmeldenPpa);
+
+        topPanelPpa.add(buttonPanelPpaTop, BorderLayout.EAST);
 	
 	    cardPpa.add(topPanelPpa, BorderLayout.NORTH);
 	
@@ -413,8 +555,9 @@ public class MainFrame extends JFrame {
 	    JPanel buttonPanelPpa = new JPanel(new FlowLayout(FlowLayout.LEFT));
 	    progressBarStudent = new JProgressBar(0, 100);
 	    progressBarStudent.setStringPainted(true);
-	    progressBarStudent.setString("Beispiel");
-	    progressBarStudent.setPreferredSize(new Dimension(250, 30)); 
+	    progressBarStudent.setString("");
+	    progressBarStudent.setBorder(titledBorderFortschritt);
+	    progressBarStudent.setPreferredSize(new Dimension(350, 40)); 
 	
 	    JComboBox<String> optionsComboBoxPpa = Controller.createOptionsComboBox();
 	    buttonPanelPpa.add(optionsComboBoxPpa);
@@ -440,7 +583,7 @@ public class MainFrame extends JFrame {
 	             selectedStudent.setAktiviert(true);
 	            try {
 	                DatabaseManager.activateStudent();
-	                Controller.updateLists(studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa);
+	                Controller.updateLists(studentListPpaModel, professorListModelTab2, studentListModelNoTutor);
 	            } catch (ClassNotFoundException e1) {
 	                e1.printStackTrace();
 	            }
@@ -457,8 +600,8 @@ public class MainFrame extends JFrame {
 	    Controller.tabSwitchListener(tabbedPanePpa);
 	
 	    // Tab 2: Betreuerverwaltung
-	    studentListModelTab2Ppa = new DefaultListModel<>();
-	    JList<String> studentListTab2Ppa = new JList<>(studentListModelTab2Ppa);
+	    studentListModelNoTutor = new DefaultListModel<>();
+	    JList<String> studentListTab2Ppa = new JList<>(studentListModelNoTutor);
 	    studentListTab2Ppa.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	    studentListTab2Ppa.setBorder(BorderFactory.createTitledBorder("Studenten ohne Betreuer"));
 	    studentListTab2Ppa.setPreferredSize(new Dimension(250, 400)); 
@@ -504,7 +647,7 @@ public class MainFrame extends JFrame {
 	
 	    zuweiseButton.addActionListener(e -> {
 	        Controller.setBetreuer();
-	        Controller.updateLists(studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa);
+	        Controller.updateLists(studentListPpaModel, professorListModelTab2, studentListModelNoTutor);
 	    });
 	
 	    JPanel studentPanelTab2Ppa = new JPanel(new BorderLayout(10, 10));
@@ -533,7 +676,7 @@ public class MainFrame extends JFrame {
 	
 	    cardPpa.add(tabbedPanePpa, BorderLayout.CENTER);
 	
-	    tabbedPaneP.addTab("Studentenliste", tab1Panel);
+	    tabbedPaneP.addTab("Studentenliste", tab1PanelProf);
 	    cardProfessor.add(tabbedPaneP, BorderLayout.CENTER);
      
         contentPane.add(cardsPanel, BorderLayout.CENTER);
@@ -543,8 +686,9 @@ public class MainFrame extends JFrame {
 
         private static final Logger logger = Logger.getLogger(MainFrame.class.getName());
 
-        private static void setUIFont(FontUIResource fontRes) {
-            String[] uiDefaults = {
+        //Setzt die Schrif Parameter für alle für UI-Komponenten.(Danke geht raus an Stack Overflow)
+        public static void setUIFont(FontUIResource SchriftParameter) {
+            String[] uiStyle = {
                 "Label.font", "Button.font", "ToggleButton.font", "RadioButton.font", "CheckBox.font", 
                 "ColorChooser.font", "ComboBox.font", "ComboBoxItem.font", "InternalFrame.titleFont", 
                 "List.font", "MenuBar.font", "MenuItem.font", "RadioButtonMenuItem.font", "CheckBoxMenuItem.font", 
@@ -554,92 +698,99 @@ public class MainFrame extends JFrame {
                 "TitledBorder.font", "ToolBar.font", "ToolTip.font", "Tree.font"
             };
 
-            for (String key : uiDefaults) {
-                UIManager.put(key, fontRes);
+            for (String key : uiStyle) {
+                UIManager.put(key, SchriftParameter);
             }
         }
-        
+
+        //Login Methode.
         public static void handleLogin(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel, JTextField usernameField, JPasswordField passwordField) {
             String cardName = authenticateUser(usernameField.getText(), new String(passwordField.getPassword()));
             clearFields(usernameField, passwordField);
-            if (cardName != null && cardName.equals("nicht Aktiviert")) {
+            if ("nicht Aktiviert".equals(cardName)) {
                 loginLabel.setText("Account noch nicht Aktiviert");
             } else {
                 handlePostLogin(cardName, cardLayout, cardsPanel);
             }
         }
 
+        //Authentifiziert Nutzer
         private static String authenticateUser(String username, String password) {
             String role = DatabaseManager.getRole(username, password);
             if (role == null) {
                 loginLabel.setText("Ungültiger Nutzername oder Passwort.");
+                return null;
             } else {
                 showGreetings();
                 logger.log(Level.INFO, "User Authentifiziert: {0}", username);
                 return role;
             }
-            return null;
         }
 
+        //Aktionen nach Log-in zb Liste füllen.
         private static void handlePostLogin(String cardName, CardLayout cardLayout, JPanel cardsPanel) {
             switchCard(cardLayout, cardsPanel, cardName);
             if (User.getLoggedInuser() instanceof Ppa) {
-                populatePpaLists();
+                controlPopulateList(studentListPpaModel, professorListModelTab2, studentListModelNoTutor);
+            } else if (User.getLoggedInuser() instanceof Professor) {
+                controlPopulateList(studentListModelProfNoTutor, studentListModelProfMyStudents);
+            } else if (User.getLoggedInuser() instanceof Student) {
+            	updateProgressBars();
             }
         }
 
+        //Switcht Karte
         private static void switchCard(CardLayout cardLayout, JPanel cardsPanel, String cardName) {
             cardLayout.show(cardsPanel, cardName);
         }
 
-        private static void populatePpaLists() {
-            controlPopulateList(studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa);
-        }
-
+        //Füllt Listen je nach Rolle
         @SafeVarargs
         private static void controlPopulateList(DefaultListModel<String>... models) {
-            if (User.getLoggedInuser() instanceof Ppa) {
-                if (models != null && models.length == 3) {
-                    populateUserList(models[0], "studenten", false);
-                    populateUserList(models[1], "professoren", false);
-                    populateUserList(models[2], "studenten", true);
-                }
+            User loggedInUser = User.getLoggedInuser();
+            if (loggedInUser instanceof Ppa) {
+                populateUserList(models[0], "studenten", false);
+                populateUserList(models[1], "professoren", false);
+                populateUserList(models[2], "studenten", true);
+            } else if (loggedInUser instanceof Professor) {
+                populateUserList(models[0], "studenten", true);
+                populateUserList(models[1], "meinestudenten", false);
             }
         }
 
+        //Füllt bestimmte Liste.
         private static void populateUserList(DefaultListModel<String> listModel, String tableName, boolean noTutor) {
             UserService.populateUserList(listModel, tableName, noTutor);
-            if (noTutor) {
-                logger.log(Level.INFO, "Liste Studenten ohne Betreuer gefüllt: {0}", tableName);
-            } else {
-                logger.log(Level.INFO, "Modell gefüllt: {0}", tableName);
-            }
+                logger.log(Level.INFO, "Liste gefüllt: ", tableName);
+
         }
 
+        //Leert Login Felder.
         private static void clearFields(JTextField usernameField, JPasswordField passwordField) {
             usernameField.setText("");
             passwordField.setText("");
-            logger.log(Level.INFO, "Login Felder geleert.");
         }
 
+        //Logout
         public static void handleLogout(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel) {
             User.setLoggedInuser(null);
             switchCard(cardLayout, cardsPanel, "CardLogIn");
             DatabaseManager.closeConnection();
-            UserService.delSL();
+            UserService.delAll();
         }
 
+        //Setzt selektiertes Listenelement.
         public static void handleMouseClick(JList<String> list, JTextArea textArea, String listIdentifier) {
-            String result;
             try {
-                result = setSelectedUser(list, listIdentifier);
+                String result = setSelectedUser(list, listIdentifier);
                 textArea.setText(result);
-                logger.log(Level.INFO, "Listenelement gewählt: {0}", result);
+                updateProgressBars();
             } catch (ClassNotFoundException | SQLException e) {
                 e.printStackTrace();
             }
         }
 
+        //Setzt Selektierten Nutzer.
         public static String setSelectedUser(JList<String> studentList, String listIdentifier) throws ClassNotFoundException, SQLException {
             int selectedIndex = studentList.getSelectedIndex();
             if (selectedIndex != -1) {
@@ -651,209 +802,210 @@ public class MainFrame extends JFrame {
                     } else {
                         User.setSelectedUser(selectedUser);
                     }
-                    logger.log(Level.INFO, "Selected User: {0}", selectedUser);
-                    if(User.getSelectedProf() != null)logger.log(Level.INFO, "Selected Prof: {0}", User.getSelectedProf().toString());
+                    logger.log(Level.INFO, "Selected User: ", selectedUser);
                     return selectedUser.printUserDetails();
                 }
             }
             return null;
         }
 
+        //Je nach Selektierter Liste wird in bestimmter Liste nach PK gesucht
         private static int getSelectedPk(int selectedIndex, String listIdentifier) {
             return switch (listIdentifier) {
-			    case "studentList" -> UserService.getSLIndex(selectedIndex);
-			    case "studentListNoTutor" -> UserService.getSLNoTutorIndex(selectedIndex);
-			    case "professorList" -> UserService.getPLIndex(selectedIndex);
-			    default -> {
-			        logger.log(Level.WARNING, "Unbekannte Liste: {0}", listIdentifier);
-			        yield -1;
-			    }
-			};
+                case "studentList" -> UserService.getSLIndex(selectedIndex);
+                case "studentListNoTutor" -> UserService.getSLNoTutorIndex(selectedIndex);
+                case "professorList" -> UserService.getPLIndex(selectedIndex);
+                case "professorListMyStudents" -> UserService.getSLMyStudentsIndex(selectedIndex);
+                default -> -1;
+            };
         }
 
-        private static void updateLists(DefaultListModel<String> studentListPpaModel, DefaultListModel<String> professorListModelTab2, DefaultListModel<String> studentListModelTab2Ppa) {
-        	Controller.controlPopulateList(studentListPpaModel, professorListModelTab2, studentListModelTab2Ppa);
+        //Updated Listen.
+        @SafeVarargs
+        private static void updateLists(DefaultListModel<String>... listModels) {
+            UserService.delAll();
+            controlPopulateList(listModels);
         }
-        
+
+        //Leert Textbereiche in Ansichten
         public static void clearTextAreas(JTextArea... textAreas) {
             for (JTextArea textArea : textAreas) {
                 textArea.setText("");
             }
         }
-                
-        //Setzt Selektierten Nutzer bei tab switch auf null um Probleme bei zuteilung zu vermeiden.
+
+        //setzt bei Tab wechsel selektierten Nutzer auf null.
         public static void tabSwitchListener(JTabbedPane tabbedPane) {
             tabbedPane.addChangeListener(e -> {
-                //int selectedIndex = tabbedPane.getSelectedIndex();
-                //var selectedTabTitle = tabbedPane.getTitleAt(selectedIndex);
                 User.setSelectedUser(null);
-                logger.log(Level.INFO, "User geleert.");
-                
             });
         }
-        
+
+        //Setzt Label auf Begrüßung
         public static void showGreetings() {
             String role = User.getLoggedInuser().getClassName();
-
             switch (role) {
-                case "Student" -> studentLabel.setText(User.getLoggedInuser().showGreetings());
+                case "Student" -> {
+                    studentLabel.setText(User.getLoggedInuser().showGreetings() + " (MNr: " + ((Student) User.getLoggedInuser()).getPK() + ")");
+                    studentErstLabel.setText(User.getLoggedInuser().showGreetings() + " (MNr: " + ((Student) User.getLoggedInuser()).getPK() + ")");
+                    try {
+                        String professorName = DatabaseManager.getProfessorName(((Student) User.getLoggedInuser()).getProfID());
+
+                        if (!professorName.isEmpty()) {
+                            studentBetreuerLabel.setText("Dein Betreuer: " + professorName);
+                        } else {
+                            studentBetreuerLabel.setText("Dein Betreuer: Noch kein Betreuer vorhanden.");
+                        }
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+					}
+                }
                 case "Professor" -> profLabel.setText(((Professor) User.getLoggedInuser()).showGreetings() + " (ProfID: " + ((Professor) User.getLoggedInuser()).getPK() + ")");
                 case "Ppa" -> ppaLabel.setText(User.getLoggedInuser().showGreetings());
-                default -> logger.log(Level.SEVERE, "Unbekannte Rolle");
+            }
+        }
+
+        //Zuweisungs Logik
+        public static void setBetreuer() {
+            User loggedInUser = User.getLoggedInuser();
+            if (loggedInUser instanceof Professor || loggedInUser instanceof Ppa) {
+                handleAssignProf();
+            }
+        }
+
+        //Zuweisungs Logik.
+        private static void handleAssignProf() {
+            User selectedProf = User.getLoggedInuser() instanceof Ppa ? User.getSelectedProf() : User.getLoggedInuser();
+            User selectedStudent = User.getSelectedUser();
+            if (selectedProf == null || selectedStudent == null) {
+                return;
+            }
+            assignProfToStudent(selectedProf.getPK(), selectedStudent.getPK());
+        }
+
+        //Weist Student Prof zu.
+        private static void assignProfToStudent(int profId, int MNr) {
+            ((Student) User.getSelectedUser()).setProfID(profId);
+            DatabaseManager.setProfID(profId, MNr);
+        }
+
+        //Bei Erstanmeldung werden Firma u. Thema gespeichert
+        public static void handleConfirm(JTextField companyField, JTextArea topicField) {
+            String company = companyField.getText();
+            String topic = topicField.getText();
+            if (company.isEmpty() || topic.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Bitte füllen Sie alle Felder aus", "Fehler", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            try {
+                DatabaseManager.saveStudentData(User.getLoggedInuser(), company, topic);
+                JOptionPane.showMessageDialog(null, "Stammdaten erfolgreich gespeichert", "Erfolg", JOptionPane.INFORMATION_MESSAGE);
+                switchCard(cardLayout, cardsPanel, "CardLogIn");
+            } catch (SQLException e) {
+                logger.log(Level.SEVERE, null, e);
+                JOptionPane.showMessageDialog(null, "Fehler beim Speichern der Daten", "Fehler", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+
+        //Optionen für Combo Box
+        public static JComboBox<String> createOptionsComboBox() {
+            String[] options = {"Besuchs Bericht", "Studierenden Bericht", "Tätigkeitsnachweis", "Vortrag Bericht"};
+            return new JComboBox<>(options);
+        }
+
+        //Download Button Klick.
+        public static void handleDownloadButtonClick(JComboBox<String> optionsComboBox) {
+            try {
+                String documentType = getSelectedOption(optionsComboBox);
+                DocumentService.downloadDocument(documentType);
+            } catch (Exception e) {
+                logger.severe("Fehler beim Behandeln der ausgewählten Option: " + e.getMessage());
+            }
+        }
+
+        //Gibt ComboBox Option als Index zurück.
+        public static String getSelectedOption(JComboBox<String> optionsComboBox) {
+            int selectedIndex = optionsComboBox.getSelectedIndex();
+            return getDocType(selectedIndex + 1);
+        }
+
+
+        //Gibt den Dokumenttyp basierend auf der Auswahl zurück.
+        public static String getDocType(int documentNr) {
+            return switch (documentNr) {
+                case 1 -> "BesucherBericht";
+                case 2 -> "StudBericht";
+                case 3 -> "TaetigkeitsNw";
+                case 4 -> "VortrBericht";
+                default -> null;
+            };
+        }
+
+        // Behandelt den Upload-Vorgang.
+        public static void handleUpload(JComboBox<String> optionsComboBox) {
+            File file = chooseFile();
+            if (file != null) {
+                String documentType = getSelectedOption(optionsComboBox);
+                String fileName = file.getName();
+                if (fileName.toLowerCase().endsWith(".pdf")) {
+                    try {
+                        DocumentService.uploadDocument(file, documentType);
+                    } catch (ClassNotFoundException | SQLException ex) {
+                        ex.printStackTrace();
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "Nur PDF's erlaubt.", "File Upload Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+
+        //Öffnet den Dateiauswahl-Dialog.
+        public static File chooseFile() {
+            JFileChooser fileChooser = new JFileChooser();
+            int returnValue = fileChooser.showOpenDialog(null);
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                return fileChooser.getSelectedFile();
+            }
+            return null;
+        }
+        
+        //Updated Progress Bars bei klick oder Anmeldung
+        public static void updateProgressBars() {
+            if (User.getLoggedInuser() instanceof Ppa || User.getLoggedInuser() instanceof Professor) {
+                int studentMnr = User.getSelectedUser().getPK();
+                int returnValue = 0;
+				try {
+					returnValue = DatabaseManager.countAssignedDocuments(studentMnr);
+				} catch (ClassNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+                updateProgress(progressBarStudent, returnValue);
+                updateProgress(progressBarPpa, returnValue);
+            } else {
+                try {
+                    int returnValue = DatabaseManager.countAssignedDocuments(User.getLoggedInuser().getPK());
+                    updateProgress(progressBarS, returnValue);
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                    return;
+                }
             }
         }
         
-        //Setzt ProfID bei selektiertem User und in DB.
-        public static void setBetreuer() {
-            User selectedProf = User.getSelectedProf();
-            User selectedStudent = (Student) User.getSelectedUser();
-            
-            if (selectedProf == null || selectedStudent == null) {
-                logger.log(Level.WARNING, "Keine Auswahl getroffen.");
-                return;
+        //Setzt ProgressBar Wert und Text auf fortschritt
+        private static void updateProgress(JProgressBar progressBar, int fortschritt) {
+            if (fortschritt < 0) {
+                fortschritt = 0;
+            } else if (fortschritt > 4) {
+                fortschritt = 4;
             }
-            
-            int profId = selectedProf.getPK();
-            int MNr = selectedStudent.getPK();
-            ((Student) selectedStudent).setProfID(profId);
-            
-            DatabaseManager.setProfID(profId, MNr);
-			logger.log(Level.INFO, "Zuweisung erfolgreich.");
+
+            progressBar.setValue(fortschritt * 25); 
+            progressBar.setString(fortschritt + "/4");
         }
-     
-	    private static void handleConfirm(JTextField companyField, JTextArea topicField) {
-	        String company = companyField.getText();
-	        String topic = topicField.getText();
-	
-	        System.out.println("Confirm button clicked");
-	        System.out.println("Company: " + company);
-	        System.out.println("Topic: " + topic);
-	
-	        if (company.isEmpty() || topic.isEmpty()) {
-	            JOptionPane.showMessageDialog(null, "Bitte füllen Sie alle Felder aus", "Fehler",
-	                    JOptionPane.ERROR_MESSAGE);
-	            return;
-	        }
-	
-	        //Daten in DB gespeichert
-	        try {
-	            DatabaseManager.saveStudentData(User.getLoggedInuser(), company, topic);
-	            JOptionPane.showMessageDialog(null, "Stammdaten erfolgreich gespeichert", "Erfolg",
-	                    JOptionPane.INFORMATION_MESSAGE);
-	            
-	        } catch (SQLException e) {
-	            Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, e);
-	            JOptionPane.showMessageDialog(null, "Fehler beim Speichern der Daten", "Fehler",
-	                    JOptionPane.ERROR_MESSAGE);
-	        }
-	    }
-      
-	    private static void loadInactiveStudentDataIntoTable(DefaultTableModel tableModel) {
-	        List<Student> students = DatabaseManager.getAllInactiveStudents();
-	        for (Student student : students) {
-	            Object[] rowData = {
-	                student.getVorname() + " " + student.getNachname(),
-	                student.getPK(),
-	                student.getFirma(),
-	                student.getThema()
-	            };
-	            tableModel.addRow(rowData);
-	        }
-	    }
-	
-	    private static void handleAssignButton(JTable table, DefaultTableModel tableModel) throws HeadlessException {
-	        int selectedRow = table.getSelectedRow();
-	        if (selectedRow == -1) {
-	            JOptionPane.showMessageDialog(contentPane, "Bitte wählen Sie einen Studenten aus der Liste aus.", "Keine Auswahl", JOptionPane.WARNING_MESSAGE);
-	            return;
-	        }
-	
-	        int studentMNr = (int) tableModel.getValueAt(selectedRow, 1); // Annahme: MNr ist in der zweiten Spalte
-	        int professorId = User.getLoggedInuser().getPK();
-	
-	        DatabaseManager.assignStudentToProfessor(studentMNr, professorId);
-	        
-	        // Aktualisieren der Tabelle
-	        tableModel.setRowCount(0); // Leeren der Tabelle
-	        loadInactiveStudentDataIntoTable(tableModel); // Neuladen der Tabelle mit den aktuellen Daten
-	    }
-    
-	    private static void loadProfessorStudentDataIntoTable(DefaultTableModel tableModel) {
-	        List<Student> students = DatabaseManager.getProfessorStudents(User.getLoggedInuser().getPK());
-	        for (Student student : students) {
-	            Object[] rowData = {
-	                student.getVorname() + " " + student.getNachname(),
-	                student.getPK(),
-	                student.getFirma(),
-	                student.getThema()
-	            };
-	            tableModel.addRow(rowData);
-	        }
-	    }
-	    
-	    private static JComboBox<String> createOptionsComboBox() {
-	        String[] options = {"Besuchs Bericht", "Studierenden Bericht", "Tätigkeitsnachweis", "Vortrag Bericht"};
-	        return new JComboBox<>(options);
-	    }
-	    
-	    private static void handleDownloadButtonClick(JComboBox<String> optionsComboBox) {
-	        try {
-	            String documentType = getSelectedOption(optionsComboBox);
-	            logger.info("Option ausgewählt. Dokumenttyp: " + documentType);
-	            DocumentService.downloadDocument(documentType);
-	        } catch (Exception e) {
-	            logger.severe("Fehler beim Behandeln der ausgewählten Option: " + e.getMessage());
-	        }
-	    }
 
-	    private static String getSelectedOption(JComboBox<String> optionsComboBox) {
-	        int selectedIndex = optionsComboBox.getSelectedIndex();
-	        int optionNumber = selectedIndex + 1;
-	        return getDocType(optionNumber);//Rückgabe des ausgewählten Dokumenttyps.
-	    }
-
-	    // Methode zur Zuordnung einer Dokumentnummer zu einem Dokumenttyp.
-	    public static String getDocType(int documentNr) {
-	        return switch (documentNr) {
-	            case 1 -> "BesucherBericht";
-	            case 2 -> "StudBericht";
-	            case 3 -> "TaetigkeitsNw";
-	            case 4 -> "VortrBericht";
-	            default -> null;
-	        };
-	    }
-
-
-	    private static void handleUpload(JComboBox<String> optionsComboBox) {
-	        File file = Controller.chooseFile(); // Dateiauswahl über Dateiauswahlpopup.
-	        if (file != null) {
-	            String documentType = getSelectedOption(optionsComboBox);
-	            String fileName = file.getName();
-	            
-	            //Check für Datei Endung.
-	            if (fileName.toLowerCase().endsWith(".pdf")) {
-	                try {
-	                    DocumentService.uploadDocument(file, documentType);
-	                } catch (ClassNotFoundException | SQLException ex) {
-	                    ex.printStackTrace();
-	                }
-	            } else {
-	                JOptionPane.showMessageDialog(null, "Nur PDF's erlaubt.", "File Upload Error", JOptionPane.ERROR_MESSAGE);
-	            }
-	        }
-	    }
-
-	    // Methode zur Auswahl einer Datei über den Dateiauswahldialog
-	    public static File chooseFile() {
-	        JFileChooser fileChooser = new JFileChooser();
-	        int returnValue = fileChooser.showOpenDialog(null);
-	        if (returnValue == JFileChooser.APPROVE_OPTION) {
-	            return fileChooser.getSelectedFile();//Rückgabe der ausgewählten Datei
-	        } else {
-	            return null;
-	        }
-	    }
-	}
+    }
 }
 
 

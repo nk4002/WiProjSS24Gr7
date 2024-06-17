@@ -178,16 +178,22 @@ public class DatabaseManager {
         }
     }
 
-    //Geändert am 29.05 von if else auf switch + check ob Aktiviert oder nicht.
+    //Geändert am 16.06 switch + check für listModel
     public static List<String> getUsers(String tableName, boolean noTutor) {
-    	List<String> users = new ArrayList<>();
-        String sql = switch (tableName) {
-            case "studenten" -> noTutor ? 
+        List<String> users = new ArrayList<>();
+        String sql;
+        
+        switch (tableName) {
+            case "studenten" -> sql = noTutor ? 
                 "SELECT MNr, Vorname, Name, Aktiviert FROM studenten WHERE ProfID IS NULL AND Aktiviert = 1" : 
                 "SELECT MNr, Vorname, Name, Aktiviert FROM studenten";
-            case "professoren" -> "SELECT ProfID, Vorname, Name FROM professoren";
+            case "professoren" -> sql = "SELECT ProfID, Vorname, Name FROM professoren";
+            case "meinestudenten" -> {
+                int profId = User.getLoggedInuser().getPK();
+                sql = "SELECT MNr, Vorname, Name, Aktiviert FROM studenten WHERE ProfID = " + profId;
+            }
             default -> throw new IllegalArgumentException("Ungültiger Tabellen Name: " + tableName);
-        };
+        }
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -196,18 +202,23 @@ public class DatabaseManager {
             while (rs.next()) {
                 String userName = rs.getString("Vorname") + " " + rs.getString("Name");
 
-                if ("studenten".equals(tableName)) {
-                    int mnr = rs.getInt("MNr");
-                    if (noTutor) {
-                        UserService.addSLNoTutor(mnr);
-                    } else {
-                        if (!rs.getBoolean("Aktiviert")) {
-                            userName += " (Nicht Aktiviert!)";
+                switch (tableName) {
+                    case "studenten" -> {
+                        int mnr = rs.getInt("MNr");
+                        if (noTutor) {
+                            UserService.addSLNoTutor(mnr);
+                        } else {
+                            if (!rs.getBoolean("Aktiviert")) {
+                                userName += " (Nicht Aktiviert!)";
+                            }
+                            UserService.addSL(mnr);
                         }
-                        UserService.addSL(mnr);
                     }
-                } else if ("professoren".equals(tableName)) {
-                    UserService.addPL(rs.getInt("ProfID"));
+                    case "professoren" -> UserService.addPL(rs.getInt("ProfID"));
+                    case "meinestudenten" -> {
+                        int mnr = rs.getInt("MNr");
+                        UserService.addSLMyStudents(mnr);
+                    }
                 }
 
                 users.add(userName);
@@ -219,6 +230,7 @@ public class DatabaseManager {
 
         return users;
     }
+
 
     //Utilitäre Methode um Dopplung zu vermeiden.
     //Platzhalter
@@ -452,23 +464,48 @@ public class DatabaseManager {
         return Optional.empty();
     }
 
-    //Methode zum Speichern des Document-Objekts in der Datenbank
+    //Methode Speichert Dokument in DB bei Überschneidung mit bereits
+    //vorhandenem Paar aus MNr und DokumentTyp wird das Existierende Element Überschrieben.
     public static boolean saveDocumentToDatabase(Document document) throws ClassNotFoundException {
-        String sql = "INSERT INTO dokumente (Mnr, DokumentTyp, Dokument, DateiTyp, Zeitstempel) VALUES (?, ?, ?, ?, ?)";
-        try (Connection connection = DatabaseManager.getConnection(); PreparedStatement ps = connection.prepareStatement(sql)) {
-           
-            ps.setInt(1, document.getMNr());
-            ps.setString(2, document.getDocumentType());
-            ps.setBlob(3, document.getDocument());
-            ps.setString(4, document.getDateiTyp());
-            ps.setTimestamp(5, document.getZeitStempel());
+        String selectSql = "SELECT COUNT(*) FROM dokumente WHERE Mnr = ? AND DokumentTyp = ?";
+        String updateSql = "UPDATE dokumente SET Dokument = ?, DateiTyp = ?, Zeitstempel = ? WHERE Mnr = ? AND DokumentTyp = ?";
+        String insertSql = "INSERT INTO dokumente (Mnr, DokumentTyp, Dokument, DateiTyp, Zeitstempel) VALUES (?, ?, ?, ?, ?)";
 
-            int rowsInserted = ps.executeUpdate();
-            return rowsInserted > 0;
+        try (Connection connection = DatabaseManager.getConnection();
+             PreparedStatement selectPs = connection.prepareStatement(selectSql);
+             PreparedStatement updatePs = connection.prepareStatement(updateSql);
+             PreparedStatement insertPs = connection.prepareStatement(insertSql)) {
+
+            selectPs.setInt(1, document.getMNr());
+            selectPs.setString(2, document.getDocumentType());
+
+            ResultSet resultSet = selectPs.executeQuery();
+            if (resultSet.next()) {
+                int count = resultSet.getInt(1);
+                if (count > 0) {
+                    updatePs.setBlob(1, document.getDocument());
+                    updatePs.setString(2, document.getDateiTyp());
+                    updatePs.setTimestamp(3, document.getZeitStempel());
+                    updatePs.setInt(4, document.getMNr());
+                    updatePs.setString(5, document.getDocumentType());
+
+                    int rowsUpdated = updatePs.executeUpdate();
+                    return rowsUpdated > 0;
+                } else {
+                    insertPs.setInt(1, document.getMNr());
+                    insertPs.setString(2, document.getDocumentType());
+                    insertPs.setBlob(3, document.getDocument());
+                    insertPs.setString(4, document.getDateiTyp());
+                    insertPs.setTimestamp(5, document.getZeitStempel());
+
+                    int rowsInserted = insertPs.executeUpdate();
+                    return rowsInserted > 0;
+                }
+            }
         } catch (SQLException ex) {
             logger.severe("Fehler beim Speichern des Dokuments in der Datenbank: " + ex.getMessage());
-            return false;
         }
+        return false;
     }
 
     //Methode zum Erstellen eines Blob aus einem Byte-Array.
@@ -480,6 +517,49 @@ public class DatabaseManager {
             return blob;
         }
     }
+    
+    public static String getProfessorName(int profID) throws ClassNotFoundException {
+        String professorenName = "";
 
+        String sql = "SELECT Name, Vorname FROM professoren WHERE ProfID = ?";
+
+        try (
+            Connection verbindung = getConnection();
+            PreparedStatement pstmt = verbindung.prepareStatement(sql);
+        ) {
+            pstmt.setInt(1, profID);
+
+            ResultSet ergebnis = pstmt.executeQuery();
+
+            if (ergebnis.next()) {
+                String name = ergebnis.getString("Vorname");
+                String vorname = ergebnis.getString("Name");
+                professorenName = vorname + " " + name;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return professorenName;
+    }
+
+    public static int countAssignedDocuments(int studentenMnr) throws ClassNotFoundException {
+        int anzahl = 0;
+        String sql = "SELECT COUNT(*) FROM dokumente WHERE Mnr = ?";
+
+        try (Connection verbindung = getConnection();
+             PreparedStatement ps = verbindung.prepareStatement(sql)) {
+            ps.setInt(1, studentenMnr);
+            ResultSet ergebnis = ps.executeQuery();
+            if (ergebnis.next()) {
+                anzahl = ergebnis.getInt(1);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return anzahl;
+    }
 }
 
