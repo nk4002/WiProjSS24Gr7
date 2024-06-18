@@ -64,6 +64,7 @@ public class DatabaseManager {
         }
     }
     
+    //Geht Durch einzelne Tabellen uns returned Die Rolle als String damit man im MainFrame die richtige Karte gezeigt wird
     public static String getRole(String username, String password) {
         String hashedPassword;
         try {
@@ -134,6 +135,7 @@ public class DatabaseManager {
         return null;
     }
 
+    //Setzt den eingeloggten Nutzer
     public static void logIn(int PK, String userType) {
         logger.info("Versucht logIn mit PK: " + PK);
         try (Connection conn = getConnection()) {
@@ -141,10 +143,7 @@ public class DatabaseManager {
                 case "studenten" -> "SELECT * FROM studenten WHERE MNr = ?";
                 case "professoren" -> "SELECT * FROM professoren WHERE ProfID = ?";
                 case "ppa" -> "SELECT * FROM ppa WHERE PPAID = ?";
-                default -> {
-                    logger.warning("Unbekannter Benutzertyp: " + userType);
-                    yield null;
-                }
+                default -> null;
             };
 
             if (query == null) return;
@@ -165,7 +164,6 @@ public class DatabaseManager {
 
                         if (loggedInUser != null) {
                             User.setLoggedInuser(loggedInUser);
-                            logger.info(userType.substring(0, 1).toUpperCase() + userType.substring(1) + " eingeloggt: " + loggedInUser.toString());
                         }
                     } else {
                         logger.warning("Benutzer nicht gefunden");
@@ -174,11 +172,10 @@ public class DatabaseManager {
             }
         } catch (SQLException | ClassNotFoundException e) {
             logger.severe("Error während logging in: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
-    //Geändert am 16.06 switch + check für listModel
+    //Geändert am 16.06 switch + check für listModel 
     public static List<String> getUsers(String tableName, boolean noTutor) {
         List<String> users = new ArrayList<>();
         String sql;
@@ -332,25 +329,17 @@ public class DatabaseManager {
     }
     
     // Methode um Firma und Thema zu speichern
-    public static void saveStudentData(User user, String company, String topic) throws SQLException {
+    public static void saveStudentData(User user, String company, String topic) {
         String query = "UPDATE studenten SET Firma = ?, Thema = ? WHERE MNr = ?";
 
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, company);
             stmt.setString(2, topic);
-            stmt.setInt(3, user.getPK()); // PK = MNr
-            int rowsAffected = stmt.executeUpdate();
-            if (rowsAffected > 0) {
-                logger.log(Level.INFO, "Studentendaten erfolgreich für Benutzer mit PK: {0} gespeichert", user.getPK());
-            } else {
-                logger.log(Level.WARNING, "Kein Studenteneintrag gefunden für Benutzer mit PK: {0}", user.getPK());
-            }
-        } catch (ClassNotFoundException e) {
-            logger.log(Level.SEVERE, "Datenbanktreiber nicht gefunden", e);
-            throw new SQLException("Datenbanktreiber konnte nicht geladen werden", e);
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Fehler beim Speichern der Studentendaten", e);
-            throw e;
+            stmt.setInt(3, user.getPK()); 
+            stmt.executeUpdate(); 
+            
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
         }
     }
 
@@ -544,6 +533,7 @@ public class DatabaseManager {
         return professorenName;
     }
 
+    //returned die Anzahl an Dokumenten mit der gelichen MNr um die Progress Bar richtig zu füllen
     public static int countAssignedDocuments(int studentenMnr) throws ClassNotFoundException {
         int anzahl = 0;
         String sql = "SELECT COUNT(*) FROM dokumente WHERE Mnr = ?";

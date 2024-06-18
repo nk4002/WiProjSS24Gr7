@@ -45,7 +45,6 @@ public class DocumentService {
 	         try (FileOutputStream fos = new FileOutputStream(filePath)) {
 	             //Das Dokument wird in die Datei geschrieben.
 	             fos.write(toByteArray(document.getDocument()));
-	             logger.info("Dokument erfolgreich heruntergeladen und gespeichert: " + filePath);
 	             //Erfolg Popup
 	             JOptionPane.showMessageDialog(null, "Dokument erfolgreich heruntergeladen und gespeichert unter:\n" + filePath, "Download Erfolgreich", JOptionPane.INFORMATION_MESSAGE);
 	         } catch (IOException | SQLException ex) {
@@ -54,7 +53,6 @@ public class DocumentService {
 	     });
 	     optionalDocument.orElseGet(() -> {
 	         //Misserfolg
-	         logger.warning("Kein Dokument dieser Art bei User Vorhanden Vorhanden");
 	         JOptionPane.showMessageDialog(null, "Kein Dokument dieser Art bei "+ User.getSelectedUser().getVorname() +
 	        		 " " + User.getSelectedUser().getNachname() + " Vorhanden Vorhanden", "Dokument nicht gefunden", JOptionPane.WARNING_MESSAGE);
 	         return null;
@@ -93,10 +91,8 @@ public class DocumentService {
 	             if (DatabaseManager.saveDocumentToDatabase(document)) {
 	                 // Erfolgsmeldung anzeigen
 	                 JOptionPane.showMessageDialog(null, "Dokument erfolgreich hochgeladen und gespeichert.", "Upload Erfolgreich", JOptionPane.INFORMATION_MESSAGE);
-	                 logger.info("Dokument erfolgreich hochgeladen und gespeichert: " + file.getAbsolutePath());
 	             } else {
 	                 JOptionPane.showMessageDialog(null, "Fehler beim Hochladen des Dokuments.", "Upload Fehler", JOptionPane.ERROR_MESSAGE);
-	                 logger.severe("Fehler beim Hochladen des Dokuments: " + file.getAbsolutePath());
 	             }
 	         } catch (IOException ex) {
 	             logger.severe("Fehler beim Lesen der Datei: " + ex.getMessage());

@@ -9,18 +9,12 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
-import java.awt.HeadlessException;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.sql.SQLException;
-//import java.util.Enumeration;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -33,19 +27,17 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JProgressBar;
-//import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.plaf.FontUIResource;
-import javax.swing.table.DefaultTableModel;
 import wiprojss24gr7.database.DatabaseManager;
 import wiprojss24gr7.service.DocumentService;
 import wiprojss24gr7.service.UserService;
@@ -100,7 +92,7 @@ public class MainFrame extends JFrame {
 
     public MainFrame() {
     	setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBounds(100, 100, 1000, 800);
+        setBounds(100, 100, 1200, 800);
         setMinimumSize(new Dimension(500, 400));
         setTitle("Campus Code BPS Verwaltung");
         contentPane = new JPanel();
@@ -333,7 +325,8 @@ public class MainFrame extends JFrame {
 
         gbc.gridy++;
 
-        JComboBox<String> optionsComboBoxStud = Controller.createOptionsComboBox();
+        String optionsS[] = {"Studierenden Bericht", "Tätigkeitsnachweis", "Vortrag Bericht"};
+        JComboBox<String> optionsComboBoxStud = new JComboBox<>(optionsS);
         Dimension comboBoxDimension = new Dimension(300, optionsComboBoxStud.getPreferredSize().height);
         optionsComboBoxStud.setPreferredSize(comboBoxDimension);
         contentPanel.add(optionsComboBoxStud, gbc);
@@ -478,9 +471,9 @@ public class MainFrame extends JFrame {
 	     
 	     // Buttons
 	     JButton downloadButtonProf = new JButton("Download Dokument");
-	     downloadButtonProf.addActionListener(e -> Controller.handleDownloadButtonClick(comboBoxUtil));
+	     downloadButtonProf.addActionListener(e -> Controller.handleDownloadButtonClick(comboBoxProf));
 	     JButton uploadButtonP = new JButton("Upload Besucherbericht");
-	     uploadButtonP.addActionListener(e -> Controller.handleUpload(optionsComboBoxStud));
+	     uploadButtonP.addActionListener(e -> Controller.handleUpload(comboBoxUtil));
 	     bottomPanel.add(downloadButtonProf);
 	     bottomPanel.add(uploadButtonP);
 	
@@ -577,8 +570,9 @@ public class MainFrame extends JFrame {
 	
 	    buttonAktivieren.addActionListener(e -> {
 	        Student selectedStudent = (Student) Student.getSelectedUser();
-	        if (selectedStudent.isAktiviert()) {
-	            return;
+	        if (selectedStudent.isAktiviert() || selectedStudent.getFirma() == null || selectedStudent.getFirma().isEmpty()) {
+	        	JOptionPane.showMessageDialog(null, "Studenten ohne Eintragung Firma und Thema können nicht aktiviert werden.", "Fehler", JOptionPane.WARNING_MESSAGE);
+	        	return;
 	        } else {
 	             selectedStudent.setAktiviert(true);
 	            try {
@@ -683,213 +677,155 @@ public class MainFrame extends JFrame {
     }
 
     private static class Controller {
+    	
+    	//War zum Debuggen in Fertigem Programm nicht Nötig
+        //private static final Logger logger = Logger.getLogger(MainFrame.class.getName());
 
-        private static final Logger logger = Logger.getLogger(MainFrame.class.getName());
-
-        //Setzt die Schrif Parameter für alle für UI-Komponenten.(Danke geht raus an Stack Overflow)
-        public static void setUIFont(FontUIResource SchriftParameter) {
-            String[] uiStyle = {
-                "Label.font", "Button.font", "ToggleButton.font", "RadioButton.font", "CheckBox.font", 
-                "ColorChooser.font", "ComboBox.font", "ComboBoxItem.font", "InternalFrame.titleFont", 
-                "List.font", "MenuBar.font", "MenuItem.font", "RadioButtonMenuItem.font", "CheckBoxMenuItem.font", 
-                "Menu.font", "PopupMenu.font", "OptionPane.font", "Panel.font", "ProgressBar.font", 
-                "ScrollPane.font", "Viewport.font", "TabbedPane.font", "Table.font", "TableHeader.font", 
-                "TextField.font", "PasswordField.font", "TextArea.font", "TextPane.font", "EditorPane.font", 
-                "TitledBorder.font", "ToolBar.font", "ToolTip.font", "Tree.font"
-            };
-
-            for (String key : uiStyle) {
-                UIManager.put(key, SchriftParameter);
+    	//Setzt alle Fonts für alle Objekte (Stack Overflow regelt)
+    	public static void setUIFont(FontUIResource font) {
+            UIDefaults defaults = UIManager.getDefaults();
+            for (Object key : defaults.keySet()) {
+                if (key instanceof String && ((String) key).endsWith(".font")) {
+                    defaults.put(key, font);
+                }
             }
         }
-
-        //Login Methode.
+    	
+    	//Methode regelt alle Wichtigen Dinge beim Login Checkt in DB nach Nutzer und Zeigt Angemessene KArte.
         public static void handleLogin(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel, JTextField usernameField, JPasswordField passwordField) {
-            String cardName = authenticateUser(usernameField.getText(), new String(passwordField.getPassword()));
-            clearFields(usernameField, passwordField);
-            if ("nicht Aktiviert".equals(cardName)) {
-                loginLabel.setText("Account noch nicht Aktiviert");
-            } else {
-                handlePostLogin(cardName, cardLayout, cardsPanel);
-            }
-        }
+            String username = usernameField.getText();
+            String password = new String(passwordField.getPassword());
+            usernameField.setText("");
+            passwordField.setText("");
 
-        //Authentifiziert Nutzer
-        private static String authenticateUser(String username, String password) {
             String role = DatabaseManager.getRole(username, password);
             if (role == null) {
                 loginLabel.setText("Ungültiger Nutzername oder Passwort.");
-                return null;
+                return;
+            }
+            
+            showGreetings();
+            
+            if ("nicht Aktiviert".equals(role)) {
+                loginLabel.setText("Account noch nicht Aktiviert");
             } else {
-                showGreetings();
-                logger.log(Level.INFO, "User Authentifiziert: {0}", username);
-                return role;
+                cardLayout.show(cardsPanel, role);
+                User loggedInUser = User.getLoggedInuser();
+                if (loggedInUser instanceof Ppa) {
+                    controlPopulateList(studentListPpaModel, professorListModelTab2, studentListModelNoTutor);
+                } else if (loggedInUser instanceof Professor) {
+                    controlPopulateList(studentListModelProfNoTutor, studentListModelProfMyStudents);
+                } else if (loggedInUser instanceof Student) {
+                    updateProgressBars();
+                }
             }
         }
 
-        //Aktionen nach Log-in zb Liste füllen.
-        private static void handlePostLogin(String cardName, CardLayout cardLayout, JPanel cardsPanel) {
-            switchCard(cardLayout, cardsPanel, cardName);
-            if (User.getLoggedInuser() instanceof Ppa) {
-                controlPopulateList(studentListPpaModel, professorListModelTab2, studentListModelNoTutor);
-            } else if (User.getLoggedInuser() instanceof Professor) {
-                controlPopulateList(studentListModelProfNoTutor, studentListModelProfMyStudents);
-            } else if (User.getLoggedInuser() instanceof Student) {
-            	updateProgressBars();
-            }
-        }
-
-        //Switcht Karte
-        private static void switchCard(CardLayout cardLayout, JPanel cardsPanel, String cardName) {
-            cardLayout.show(cardsPanel, cardName);
-        }
-
-        //Füllt Listen je nach Rolle
         @SafeVarargs
         private static void controlPopulateList(DefaultListModel<String>... models) {
             User loggedInUser = User.getLoggedInuser();
             if (loggedInUser instanceof Ppa) {
-                populateUserList(models[0], "studenten", false);
-                populateUserList(models[1], "professoren", false);
-                populateUserList(models[2], "studenten", true);
+                UserService.populateUserList(models[0], "studenten", false);
+                UserService.populateUserList(models[1], "professoren", false);
+                UserService.populateUserList(models[2], "studenten", true);
             } else if (loggedInUser instanceof Professor) {
-                populateUserList(models[0], "studenten", true);
-                populateUserList(models[1], "meinestudenten", false);
+                UserService.populateUserList(models[0], "studenten", true);
+                UserService.populateUserList(models[1], "meinestudenten", false);
             }
         }
 
-        //Füllt bestimmte Liste.
-        private static void populateUserList(DefaultListModel<String> listModel, String tableName, boolean noTutor) {
-            UserService.populateUserList(listModel, tableName, noTutor);
-                logger.log(Level.INFO, "Liste gefüllt: ", tableName);
-
-        }
-
-        //Leert Login Felder.
-        private static void clearFields(JTextField usernameField, JPasswordField passwordField) {
-            usernameField.setText("");
-            passwordField.setText("");
-        }
-
-        //Logout
+        //Setzt eingeloggten Nutzer auf Null wechselt Karte und schließt Verbindung zu DB.
         public static void handleLogout(ActionEvent e, CardLayout cardLayout, JPanel cardsPanel) {
             User.setLoggedInuser(null);
-            switchCard(cardLayout, cardsPanel, "CardLogIn");
+            cardLayout.show(cardsPanel, "CardLogIn");
             DatabaseManager.closeConnection();
             UserService.delAll();
+            resetProgressBar(progressBarStudent);
+            resetProgressBar(progressBarPpa);
+            resetProgressBar(progressBarS);
         }
 
-        //Setzt selektiertes Listenelement.
+        //Setzt Selektierten Nutzer
         public static void handleMouseClick(JList<String> list, JTextArea textArea, String listIdentifier) {
             try {
-                String result = setSelectedUser(list, listIdentifier);
-                textArea.setText(result);
-                updateProgressBars();
-            } catch (ClassNotFoundException | SQLException e) {
+                int selectedIndex = list.getSelectedIndex();
+                if (selectedIndex != -1) {
+                    int selectedPk = switch (listIdentifier) {
+                        case "studentList" -> UserService.getSLIndex(selectedIndex);
+                        case "studentListNoTutor" -> UserService.getSLNoTutorIndex(selectedIndex);
+                        case "professorList" -> UserService.getPLIndex(selectedIndex);
+                        case "professorListMyStudents" -> UserService.getSLMyStudentsIndex(selectedIndex);
+                        default -> -1;
+                    };
+                    
+                    if (selectedPk != -1) {
+                        User selectedUser = DatabaseManager.getUserByPk(selectedPk);
+                        if ("professorList".equals(listIdentifier)) {
+                            User.setSelectedProf(selectedUser);
+                        } else {
+                            User.setSelectedUser(selectedUser);
+                        }
+                        String userDetails = selectedUser.printUserDetails();
+                        textArea.setText(userDetails);
+                        updateProgressBars();
+                    }
+                }
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        //Setzt Selektierten Nutzer.
-        public static String setSelectedUser(JList<String> studentList, String listIdentifier) throws ClassNotFoundException, SQLException {
-            int selectedIndex = studentList.getSelectedIndex();
-            if (selectedIndex != -1) {
-                int selectedPk = getSelectedPk(selectedIndex, listIdentifier);
-                if (selectedPk != -1) {
-                    User selectedUser = DatabaseManager.getUserByPk(selectedPk);
-                    if ("professorList".equals(listIdentifier)) {
-                        User.setSelectedProf(selectedUser);
-                    } else {
-                        User.setSelectedUser(selectedUser);
-                    }
-                    logger.log(Level.INFO, "Selected User: ", selectedUser);
-                    return selectedUser.printUserDetails();
-                }
-            }
-            return null;
-        }
-
-        //Je nach Selektierter Liste wird in bestimmter Liste nach PK gesucht
-        private static int getSelectedPk(int selectedIndex, String listIdentifier) {
-            return switch (listIdentifier) {
-                case "studentList" -> UserService.getSLIndex(selectedIndex);
-                case "studentListNoTutor" -> UserService.getSLNoTutorIndex(selectedIndex);
-                case "professorList" -> UserService.getPLIndex(selectedIndex);
-                case "professorListMyStudents" -> UserService.getSLMyStudentsIndex(selectedIndex);
-                default -> -1;
-            };
-        }
-
-        //Updated Listen.
         @SafeVarargs
-        private static void updateLists(DefaultListModel<String>... listModels) {
+        public static void updateLists(DefaultListModel<String>... listModels) {
             UserService.delAll();
             controlPopulateList(listModels);
         }
 
-        //Leert Textbereiche in Ansichten
         public static void clearTextAreas(JTextArea... textAreas) {
             for (JTextArea textArea : textAreas) {
                 textArea.setText("");
             }
         }
 
-        //setzt bei Tab wechsel selektierten Nutzer auf null.
         public static void tabSwitchListener(JTabbedPane tabbedPane) {
-            tabbedPane.addChangeListener(e -> {
-                User.setSelectedUser(null);
-            });
+            tabbedPane.addChangeListener(e -> User.setSelectedUser(null));
         }
 
-        //Setzt Label auf Begrüßung
+        //Setzt Label Oben rechts Auf Angemeldet als: Nutzer Name
         public static void showGreetings() {
-            String role = User.getLoggedInuser().getClassName();
+            User loggedInUser = User.getLoggedInuser();
+            String role = loggedInUser.getClassName();
             switch (role) {
                 case "Student" -> {
-                    studentLabel.setText(User.getLoggedInuser().showGreetings() + " (MNr: " + ((Student) User.getLoggedInuser()).getPK() + ")");
-                    studentErstLabel.setText(User.getLoggedInuser().showGreetings() + " (MNr: " + ((Student) User.getLoggedInuser()).getPK() + ")");
+                    String greetings = loggedInUser.showGreetings() + " (MNr: " + ((Student) loggedInUser).getPK() + ")";
+                    studentLabel.setText(greetings);
+                    studentErstLabel.setText(greetings);
                     try {
-                        String professorName = DatabaseManager.getProfessorName(((Student) User.getLoggedInuser()).getProfID());
-
-                        if (!professorName.isEmpty()) {
-                            studentBetreuerLabel.setText("Dein Betreuer: " + professorName);
-                        } else {
-                            studentBetreuerLabel.setText("Dein Betreuer: Noch kein Betreuer vorhanden.");
-                        }
+                        String professorName = DatabaseManager.getProfessorName(((Student) loggedInUser).getProfID());
+                        studentBetreuerLabel.setText(professorName.isEmpty() ? "Dein Betreuer: Noch kein Betreuer vorhanden." : "Dein Betreuer: " + professorName);
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();
-					}
+                    }
                 }
-                case "Professor" -> profLabel.setText(((Professor) User.getLoggedInuser()).showGreetings() + " (ProfID: " + ((Professor) User.getLoggedInuser()).getPK() + ")");
-                case "Ppa" -> ppaLabel.setText(User.getLoggedInuser().showGreetings());
+                case "Professor" -> profLabel.setText(loggedInUser.showGreetings() + " (ProfID: " + ((Professor) loggedInUser).getPK() + ")");
+                case "Ppa" -> ppaLabel.setText(loggedInUser.showGreetings());
             }
         }
 
-        //Zuweisungs Logik
         public static void setBetreuer() {
             User loggedInUser = User.getLoggedInuser();
             if (loggedInUser instanceof Professor || loggedInUser instanceof Ppa) {
-                handleAssignProf();
+                User selectedProf = loggedInUser instanceof Ppa ? User.getSelectedProf() : loggedInUser;
+                User selectedStudent = User.getSelectedUser();
+                if (selectedProf != null && selectedStudent != null) {
+                    int profId = selectedProf.getPK();
+                    int studentMnr = selectedStudent.getPK();
+                    ((Student) selectedStudent).setProfID(profId);
+                    DatabaseManager.setProfID(profId, studentMnr);
+                }
             }
         }
 
-        //Zuweisungs Logik.
-        private static void handleAssignProf() {
-            User selectedProf = User.getLoggedInuser() instanceof Ppa ? User.getSelectedProf() : User.getLoggedInuser();
-            User selectedStudent = User.getSelectedUser();
-            if (selectedProf == null || selectedStudent == null) {
-                return;
-            }
-            assignProfToStudent(selectedProf.getPK(), selectedStudent.getPK());
-        }
-
-        //Weist Student Prof zu.
-        private static void assignProfToStudent(int profId, int MNr) {
-            ((Student) User.getSelectedUser()).setProfID(profId);
-            DatabaseManager.setProfID(profId, MNr);
-        }
-
-        //Bei Erstanmeldung werden Firma u. Thema gespeichert
         public static void handleConfirm(JTextField companyField, JTextArea topicField) {
             String company = companyField.getText();
             String topic = topicField.getText();
@@ -897,41 +833,44 @@ public class MainFrame extends JFrame {
                 JOptionPane.showMessageDialog(null, "Bitte füllen Sie alle Felder aus", "Fehler", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            try {
-                DatabaseManager.saveStudentData(User.getLoggedInuser(), company, topic);
-                JOptionPane.showMessageDialog(null, "Stammdaten erfolgreich gespeichert", "Erfolg", JOptionPane.INFORMATION_MESSAGE);
-                switchCard(cardLayout, cardsPanel, "CardLogIn");
-            } catch (SQLException e) {
-                logger.log(Level.SEVERE, null, e);
-                JOptionPane.showMessageDialog(null, "Fehler beim Speichern der Daten", "Fehler", JOptionPane.ERROR_MESSAGE);
-            }
+            DatabaseManager.saveStudentData(User.getLoggedInuser(), company, topic);
+			JOptionPane.showMessageDialog(null, "Stammdaten erfolgreich gespeichert", "Erfolg", JOptionPane.INFORMATION_MESSAGE);
+			cardLayout.show(cardsPanel, "CardLogIn");
         }
 
-        //Optionen für Combo Box
         public static JComboBox<String> createOptionsComboBox() {
-            String[] options = {"Besuchs Bericht", "Studierenden Bericht", "Tätigkeitsnachweis", "Vortrag Bericht"};
-            return new JComboBox<>(options);
+            return new JComboBox<>(new String[]{"Besuchs Bericht", "Studierenden Bericht", "Tätigkeitsnachweis", "Vortrag Bericht"});
         }
 
-        //Download Button Klick.
         public static void handleDownloadButtonClick(JComboBox<String> optionsComboBox) {
             try {
-                String documentType = getSelectedOption(optionsComboBox);
+                String documentType = getDocType(optionsComboBox.getSelectedIndex() + (User.getLoggedInuser() instanceof Student ? 2 : 1));
                 DocumentService.downloadDocument(documentType);
             } catch (Exception e) {
-                logger.severe("Fehler beim Behandeln der ausgewählten Option: " + e.getMessage());
+                e.printStackTrace();
             }
         }
 
-        //Gibt ComboBox Option als Index zurück.
-        public static String getSelectedOption(JComboBox<String> optionsComboBox) {
-            int selectedIndex = optionsComboBox.getSelectedIndex();
-            return getDocType(selectedIndex + 1);
+        //Öffnet Dateisucher.
+        public static void handleUpload(JComboBox<String> optionsComboBox) {
+            JFileChooser fileChooser = new JFileChooser();
+            int returnValue = fileChooser.showOpenDialog(null);
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+                String documentType = getDocType(optionsComboBox.getSelectedIndex() + (User.getLoggedInuser() instanceof Student ? 2 : 1));
+                if (file.getName().toLowerCase().endsWith(".pdf")) {
+                    try {
+                        DocumentService.uploadDocument(file, documentType);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "Nur PDF's erlaubt.", "File Upload Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
         }
 
-
-        //Gibt den Dokumenttyp basierend auf der Auswahl zurück.
-        public static String getDocType(int documentNr) {
+        private static String getDocType(int documentNr) {
             return switch (documentNr) {
                 case 1 -> "BesucherBericht";
                 case 2 -> "StudBericht";
@@ -941,71 +880,33 @@ public class MainFrame extends JFrame {
             };
         }
 
-        // Behandelt den Upload-Vorgang.
-        public static void handleUpload(JComboBox<String> optionsComboBox) {
-            File file = chooseFile();
-            if (file != null) {
-                String documentType = getSelectedOption(optionsComboBox);
-                String fileName = file.getName();
-                if (fileName.toLowerCase().endsWith(".pdf")) {
-                    try {
-                        DocumentService.uploadDocument(file, documentType);
-                    } catch (ClassNotFoundException | SQLException ex) {
-                        ex.printStackTrace();
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(null, "Nur PDF's erlaubt.", "File Upload Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        }
-
-        //Öffnet den Dateiauswahl-Dialog.
-        public static File chooseFile() {
-            JFileChooser fileChooser = new JFileChooser();
-            int returnValue = fileChooser.showOpenDialog(null);
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                return fileChooser.getSelectedFile();
-            }
-            return null;
-        }
-        
-        //Updated Progress Bars bei klick oder Anmeldung
         public static void updateProgressBars() {
-            if (User.getLoggedInuser() instanceof Ppa || User.getLoggedInuser() instanceof Professor) {
-                int studentMnr = User.getSelectedUser().getPK();
-                int returnValue = 0;
-				try {
-					returnValue = DatabaseManager.countAssignedDocuments(studentMnr);
-				} catch (ClassNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-                updateProgress(progressBarStudent, returnValue);
-                updateProgress(progressBarPpa, returnValue);
-            } else {
-                try {
-                    int returnValue = DatabaseManager.countAssignedDocuments(User.getLoggedInuser().getPK());
+            User loggedInUser = User.getLoggedInuser();
+            int returnValue = 0;
+            try {
+                if (loggedInUser instanceof Ppa || loggedInUser instanceof Professor) {
+                    returnValue = DatabaseManager.countAssignedDocuments(User.getSelectedUser().getPK());
+                    updateProgress(progressBarStudent, returnValue);
+                    updateProgress(progressBarPpa, returnValue);
+                } else {
+                    returnValue = DatabaseManager.countAssignedDocuments(loggedInUser.getPK());
                     updateProgress(progressBarS, returnValue);
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                    return;
                 }
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
         }
-        
-        //Setzt ProgressBar Wert und Text auf fortschritt
-        private static void updateProgress(JProgressBar progressBar, int fortschritt) {
-            if (fortschritt < 0) {
-                fortschritt = 0;
-            } else if (fortschritt > 4) {
-                fortschritt = 4;
-            }
 
+        private static void updateProgress(JProgressBar progressBar, int fortschritt) {
             progressBar.setValue(fortschritt * 25); 
             progressBar.setString(fortschritt + "/4");
         }
-
-    }
+        
+        private static void resetProgressBar(JProgressBar progressBar) {
+            progressBar.setValue(0);
+            progressBar.setString("0/4");
+        }
+   }
 }
 
 

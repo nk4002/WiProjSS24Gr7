@@ -16,14 +16,13 @@ public class UserService {
 	
 	public static void populateUserList(DefaultListModel<String> listModel, String listType, boolean noTutor) {
 	    List<String> names = DatabaseManager.getUsers(listType, noTutor);
-	    names.forEach(System.out::println);
 	    listModel.clear();
 	    for (String user : names) {
 	        listModel.addElement(user);
 	    }
 	}
 	
-    // Methods to access and manipulate SL list
+    //Methoden zu Studenten Listen
     public static List<Integer> getSL() {
         return SL;
     }
@@ -36,7 +35,6 @@ public class UserService {
         return SL.get(i);
     }
 
-    // Methods to access and manipulate SLNoTutor list
     public static List<Integer> getSLNoTutor() {
         return SLNoTutor;
     }
@@ -53,7 +51,7 @@ public class UserService {
         return SLNoTutor.get(i);
     }
 
-    // Methods to access and manipulate PL list
+    // Methodes zu Professor Listen
     public static List<Integer> getPL() {
         return PL;
     }
@@ -70,7 +68,6 @@ public class UserService {
         return PL.get(i);
     }
 
-    // Methods to access and manipulate SLMyStudents list
     public static List<Integer> getSLMyStudents() {
         return SLMyStudents;
     }
@@ -88,7 +85,7 @@ public class UserService {
         return SLMyStudents.get(i);
     }
 
-    // Method to clear all lists
+    //Alle Listen leeren
     public static void delAll() {
         SL.clear();
         SLNoTutor.clear();
